@@ -7,18 +7,19 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 11a complete and verified. Ready for Phase 12 approval (or Phase 11b if requested).
+- **Stage:** Phase 12 complete and verified. Ready for Phase 13 approval.
 - **Code:**
-  - List View, Filters, and Search (`/api/projects/:pid/tasks`):
-    - `GET /api/projects/:pid/tasks`: List view tasks endpoint supporting multi-criteria filtering (`search`, `columnId`, `category`, `priority`, `assigneeId`, `labelId`, `dueDate`), parameterized queries, strict allowlisted sorting (`position`, `title`, `priority`, `due_date`, `created_at`), and offset/limit pagination with metadata (`total`, `limit`, `offset`, `hasMore`).
-    - Privacy & Authorization: Service layer strictly verifies workspace membership and project visibility (`canViewProject`), returning 404 for non-members to prevent existence leaks.
-  - Frontend UI:
-    - View Switcher (`.tb-view-switcher`): Seamless toggle between Kanban Board (`☷ Board`) and List View (`☰ List`).
-    - Task Filter Bar (`public/js/components/task-filter-bar.js`): Modular filter bar with real-time text search, column/status, priority, due date range, assignee, and label dropdowns with "Clear Filters" action. Filters apply to both Board view (filtering columns' cards) and List view (synchronous data display).
-    - Task Table (`public/js/components/task-table.js`): Paginated, sortable table view featuring task status badges, priority badges, assignee avatars, label pills, due date highlight, sort indicators, and accessible keyboard navigation opening the task detail panel.
-    - URL State Persistence: Two-way synchronization of active view, filter selections, sorting parameters, and pagination offsets via `window.history.replaceState`.
-- **Tests:** 130 tests passing across 23 suites (`npm test`).
-- **Repository:** Phase 11a ready to commit (`phase-11a: list view, filters, and search`).
+  - Security Hardening & Controls (`tests/integration/security.test.js`):
+    - `SEC-C1..C5`: Mutation safeguards verified. Missing or invalid `X-CSRF-Token` rejected (403), untrusted `Origin` rejected (403), non-JSON `Content-Type` on mutation bodies rejected with 415 (`UNSUPPORTED_MEDIA_TYPE`), and safe reads (GET) verified without CSRF/Origin requirements.
+    - `SEC-I`: Complete IDOR sweep across all entities (workspaces, projects, boards, columns, tasks, comments, notifications). Unpermitted cross-tenant and cross-project accesses return 404 (preventing existence leakage).
+    - `SEC-P`: Role permission matrix strictly enforced on server across all roles (Owner, Admin, Member, Viewer, Lead). Viewers strictly blocked from mutating tasks, comments, or workspaces (403). Private projects strictly hidden from workspace members without explicit project membership (404).
+    - `SEC-S`: SQL injection attack payloads fuzzed across search and filters; verified parameterized statements and strict allowlist on sort parameters (400 validation error on injection).
+    - `SEC-X`: Stored XSS vectors (scripts, event handlers, iframes) safely handled as literal strings without code execution.
+    - `SEC-G`: Codebase static audit verifying zero unsafe DOM sinks (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `eval`) across `public/js/`.
+    - Security headers verified: strict CSP (`default-src 'self'`, `script-src 'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
+    - Dependency audit: `npm audit` confirms 0 vulnerabilities.
+- **Tests:** 157 tests passing across 31 suites (`npm test`).
+- **Repository:** Phase 12 ready to commit (`phase-12: security hardening and comprehensive testing`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -41,6 +42,6 @@ Context for coding sessions. Update at the end of every phase.
 | **10** | Dashboard and analytics | Completed |
 | **11a** | List view, filters, search (MVP) | Completed |
 | **11b** | Extras (FTS5 search, attachments, bulk, export) | Not started |
-| **12** | Security hardening and comprehensive testing | Ready to begin |
-| **13** | Responsive design and UX refinement | Not started |
+| **12** | Security hardening and comprehensive testing | Completed |
+| **13** | Responsive design and UX refinement | Ready to begin |
 | **14** | Deployment and production readiness | Not started |

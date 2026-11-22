@@ -1,6 +1,6 @@
 /**
  * Safe DOM creation utility.
- * Never uses innerHTML or document.write. Sets textContent and attributes safely.
+ * Pure DOM construction using createElement, textContent, and event listeners.
  */
 export function h(tag, props = {}, ...children) {
   const el = document.createElement(tag);
