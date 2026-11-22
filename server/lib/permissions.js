@@ -89,4 +89,14 @@ export const permissions = {
     if (['owner', 'admin'].includes(workspaceRole)) return true;
     return projectRole === 'lead';
   },
+
+  // Board & Column Permissions
+  canManageBoards(workspaceRole, projectRole) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    return projectRole === 'lead';
+  },
+
+  canViewBoard(workspaceRole, projectVisibility, isProjectMember) {
+    return this.canViewProject(workspaceRole, projectVisibility, isProjectMember);
+  },
 };

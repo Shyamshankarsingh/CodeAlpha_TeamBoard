@@ -132,3 +132,119 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Kanban Board & Columns */
+.tb-board-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tb-board-columns-container {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-4);
+  align-items: flex-start;
+  min-height: 500px;
+}
+
+.tb-board-column {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 280px;
+  max-width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 200px);
+}
+
+.tb-column-header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--bg);
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+}
+
+.tb-column-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.tb-column-cards {
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tb-column-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.tb-btn-icon {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.875rem;
+  line-height: 1;
+  transition: all var(--transition-fast);
+}
+
+.tb-btn-icon:hover:not(:disabled) {
+  background-color: var(--border);
+  color: var(--text);
+}
+
+.tb-btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tb-btn-icon-danger:hover:not(:disabled) {
+  background-color: var(--danger);
+  color: #FFFFFF;
+}
+
+.tb-badge-category-backlog {
+  background-color: #E2E8F0;
+  color: #475569;
+}
+
+.tb-badge-category-todo {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.tb-badge-category-in_progress {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.tb-badge-category-review {
+  background-color: #F3E8FF;
+  color: #6B21A8;
+}
+
+.tb-badge-category-done {
+  background-color: #DCFCE7;
+  color: #166534;
+}

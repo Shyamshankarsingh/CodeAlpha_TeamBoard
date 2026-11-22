@@ -1,5 +1,6 @@
 import { getDb } from '../../db/index.js';
 import { projectsRepo } from './repo.js';
+import { boardsRepo } from '../boards/repo.js';
 import { workspacesRepo } from '../workspaces/repo.js';
 import { permissions } from '../../lib/permissions.js';
 import { generateId } from '../../lib/ids.js';
@@ -36,6 +37,8 @@ export const projectsService = {
       });
 
       projectsRepo.addProjectMember(projectId, userId, 'lead');
+
+      boardsRepo.createDefaultBoard(db, projectId);
 
       logActivity(db, {
         workspaceId,

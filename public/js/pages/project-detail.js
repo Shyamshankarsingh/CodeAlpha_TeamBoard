@@ -390,6 +390,11 @@ export function ProjectDetailPage(params) {
       h(
         'div',
         { style: 'display: flex; gap: var(--space-2);' },
+        h(
+          'a',
+          { href: `/w/${wsId}/p/${projectId}/board`, className: 'tb-btn tb-btn-primary tb-btn-sm' },
+          '📋 Open Board'
+        ),
         perms.canEdit
           ? h(
               'button',
@@ -471,9 +476,13 @@ export function ProjectDetailPage(params) {
             )
           ),
           h(
-            'p',
-            { className: 'tb-text-muted', style: 'font-size: var(--font-size-sm); margin-top: var(--space-4);' },
-            'Kanban boards with drag-and-drop columns and cards will be available in Phase 5.'
+            'div',
+            { style: 'margin-top: var(--space-4);' },
+            h(
+              'a',
+              { href: `/w/${wsId}/p/${projectId}/board`, className: 'tb-btn tb-btn-secondary tb-btn-sm' },
+              'View Kanban Columns →'
+            )
           )
         ),
         h(
