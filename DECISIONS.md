@@ -58,43 +58,43 @@
 **Status:** Proposed. UUID v4 text primary keys, ISO-8601 UTC text timestamps (`YYYY-MM-DDTHH:mm:ss.sssZ`), date-only as `YYYY-MM-DD`.
 
 ### ADR-011 Argon2id library
-**Status:** Needs approval. `argon2` npm package with fallback to Node's built-in `crypto.scrypt`.
+**Status:** Approved & Verified (Phase 1 Spike). The `argon2` npm package builds and executes natively on this host ($argon2id$v=19$m=65536,t=3,p=4 verified). Fallback to Node's `crypto.scrypt` remains documented as safety precaution.
 
 ### ADR-012 Email handling
-**Status:** Needs approval. Console transport for dev/testing, SMTP via nodemailer in production. `REQUIRE_EMAIL_VERIFICATION` flag (off in dev).
+**Status:** Approved. Mailer interface with console transport (development, tests) and SMTP through nodemailer. REQUIRE_EMAIL_VERIFICATION switch (off in development).
 
 ### ADR-013 Validation library
-**Status:** Needs approval. `zod` for input schema validation across routes.
+**Status:** Approved. zod.
 
 ### ADR-014 Testing stack
-**Status:** Needs approval. Built-in `node:test` runner, `fetch`, `socket.io-client`. Optional Playwright.
+**Status:** Approved. node:test, fetch, socket.io-client; Playwright limited and optional.
 
 ### ADR-015 Dependency policy and inventory
-**Status:** Needs approval. Strict allowlist of dependencies; lockfile committed.
+**Status:** Approved. Each dependency must have a stated reason in ARCHITECTURE.md section 7; lockfile committed; npm audit reviewed in Phase 12.
 
 ### ADR-016 Pagination strategy
-**Status:** Proposed. Cursor pagination for feeds (notifications, activity, comments); offset pagination for list views and member lists.
+**Status:** Proposed. Cursor pagination for time-ordered feeds (notifications, activity, comments); offset pagination for sortable list views and member lists.
 
 ### ADR-017 API shape
-**Status:** Proposed. Unversioned `/api`, workspace-scoped resources, flat single-resource routes, uniform envelopes, 404 for unpermitted access.
+**Status:** Proposed. Unversioned /api, workspace-scoped list and create routes, flat single-resource routes, uniform envelopes, 404 for no access.
 
 ### ADR-018 Notifications persisted, jobs in process
-**Status:** Proposed. Written in same transaction as trigger; in-process timers for reminders and cleanup.
+**Status:** Proposed. Rows written in the same transaction as the cause, pushed after commit. Reminder and cleanup jobs run with timers in the server process.
 
-### ADR-019 Attachments on local disk (Deferred to Phase 11b)
-**Status:** Proposed. Local storage outside web root with allowlist and magic-byte checks.
+### ADR-019 Attachments on local disk, deferred
+**Status:** Proposed. Phase 11b, outside the web root, allow-list plus signature check, download-only.
 
 ### ADR-020 Deletion semantics
-**Status:** Proposed. Hard deletes with confirmation for workspaces, projects, boards, tasks. Archive available. Comments hard-deleted if no replies, soft-deleted if replied to.
+**Status:** Proposed. Hard deletes with explicit confirmation for workspaces, projects, boards and tasks; archive exists for projects and tasks; comments are hard-deleted unless they have replies, then soft-deleted; column deletion requires moving tasks; user deletion unsupported in the MVP.
 
 ### ADR-021 Private project visibility for admins
-**Status:** Needs approval. Owners and Admins can view all projects in the workspace, including private ones.
+**Status:** Approved. Owners and Admins can always see private projects in their workspace.
 
 ### ADR-022 Task model simplifications
-**Status:** Proposed. Subtasks double as checklists. Labels belong to project. Multiple assignees via join table.
+**Status:** Proposed. Subtasks double as checklists (one table). Labels belong to a project. Multiple assignees via a join table.
 
 ### ADR-023 Search
-**Status:** Proposed. LIKE filters in MVP; SQLite FTS5 for global search in Phase 11b.
+**Status:** Approved & Verified (Phase 1 Spike). LIKE filters in the MVP; SQLite FTS5 for global search in Phase 11b confirmed supported by the bundled `better-sqlite3` build.
 
 ### ADR-024 Repository layer for database portability
 **Status:** Proposed. Raw SQL restricted to repository files (`repo.js`), services never build SQL.

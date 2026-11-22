@@ -1,6 +1,15 @@
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { logger } from './logger.js';
+import { getDb, closeDb } from './db/index.js';
+import { runMigrations } from './db/migrate.js';
+
+// Initialize database and run migrations at boot
+const db = getDb();
+const applied = runMigrations(db);
+if (applied.length > 0) {
+  logger.info(`Database migrations completed. Applied ${applied.length} migration(s).`);
+}
 
 const app = createApp(config);
 
@@ -17,6 +26,8 @@ function shutdown(signal) {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
   server.close(() => {
     logger.info('HTTP server closed.');
+    closeDb();
+    logger.info('Database connection closed.');
     process.exit(0);
   });
 

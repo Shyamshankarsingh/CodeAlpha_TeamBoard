@@ -7,27 +7,18 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 0 complete and verified. Ready for Phase 1 approval.
-- **Code:** Basic express app with config validation, logging, security headers, error handling, SPA fallback, public HTML/CSS/JS shell.
-- **Tests:** 12 tests passing across unit and integration suites (`npm test`).
-- **Repository:** Git repository initialized at `e:\projectanagement`.
+- **Stage:** Phase 1 complete and verified. Ready for Phase 2 approval.
+- **Code:**
+  - SQLite database access with WAL mode and foreign key enforcement via `better-sqlite3`.
+  - Migration runner with atomic version tracking in `schema_migrations`.
+  - Migration `001_identity.sql` applied (`users`, `sessions`, `auth_tokens`).
+  - Transaction wrapper (`db.transact`) with rollback and `afterCommit(fn)` queue.
+  - ID and time helpers (`server/lib/ids.js`, `server/lib/time.js`).
+  - Spikes verified: Native `argon2` hashing works; SQLite FTS5 extension works.
+- **Tests:** 27 tests passing across 7 suites (`npm test`).
+- **Repository:** Git repository clean at `phase-0`.
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
-- **Documentation:** Complete specification suite saved in root and `docs/`.
-
----
-
-## Key Decisions
-
-1. **ADR-001:** Greenfield start at `e:\projectanagement`, working name "TeamBoard", Node 26.
-2. **ADR-002:** Drop separate Organization level (Workspace is tenant).
-3. **ADR-006:** SortableJS drag-and-drop + keyboard menu.
-4. **ADR-011:** Argon2id with `crypto.scrypt` fallback.
-5. **ADR-012:** Console transport in dev, SMTP nodemailer later; switchable verification.
-6. **ADR-013:** Zod validation library.
-7. **ADR-014:** `node:test` + Playwright optional.
-8. **ADR-015:** Approved dependency list.
-9. **ADR-021:** Workspace Owners and Admins can see private projects.
-10. **ADR-025:** Single unified Inbox.
+- **Documentation:** Up to date.
 
 ---
 
@@ -36,7 +27,8 @@ Context for coding sessions. Update at the end of every phase.
 | Phase | Description | Status |
 | :--- | :--- | :--- |
 | **0** | Foundation, config, health, security headers | Completed |
-| **1** | Database architecture, migrations (001), spikes | Ready to begin |
+| **1** | Database architecture, migrations (001), spikes | Completed |
+| **2** | Authentication and session management | Ready to begin |
 | **2** | Authentication and session management | Not started |
 | **3** | Workspace and membership management (002) | Not started |
 | **4** | Project management and domain event bus (003) | Not started |
