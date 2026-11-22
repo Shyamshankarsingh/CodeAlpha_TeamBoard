@@ -7,16 +7,15 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 1 complete and verified. Ready for Phase 2 approval.
+- **Stage:** Phase 2 complete and verified. Ready for Phase 3 approval.
 - **Code:**
-  - SQLite database access with WAL mode and foreign key enforcement via `better-sqlite3`.
-  - Migration runner with atomic version tracking in `schema_migrations`.
-  - Migration `001_identity.sql` applied (`users`, `sessions`, `auth_tokens`).
-  - Transaction wrapper (`db.transact`) with rollback and `afterCommit(fn)` queue.
-  - ID and time helpers (`server/lib/ids.js`, `server/lib/time.js`).
-  - Spikes verified: Native `argon2` hashing works; SQLite FTS5 extension works.
-- **Tests:** 27 tests passing across 7 suites (`npm test`).
-- **Repository:** Git repository clean at `phase-0`.
+  - Full authentication module (`/api/auth`): register, login with Argon2id and session rotation, logout, me, email verification, forgot/reset password, change password, session listing & revocation.
+  - Brute-force protection: 5-attempt account lockout (15 minutes), timing-safe dummy hash verification on unknown emails, rate limiters.
+  - Security middleware: Session loader with idle/absolute timeouts, constant-time CSRF token verification, and mutation Origin checks.
+  - User profile management (`/api/users`): profile update with IANA timezone validation, theme switching, and user search.
+  - Frontend SPA: Vanilla ES module architecture with History router, reactive store, safe `h()` DOM builder (zero `innerHTML`), accessible auth pages (login, register, forgot/reset, verify, settings).
+- **Tests:** 47 tests passing across 10 suites (`npm test`).
+- **Repository:** Git repository clean at `phase-1`.
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -28,7 +27,8 @@ Context for coding sessions. Update at the end of every phase.
 | :--- | :--- | :--- |
 | **0** | Foundation, config, health, security headers | Completed |
 | **1** | Database architecture, migrations (001), spikes | Completed |
-| **2** | Authentication and session management | Ready to begin |
+| **2** | Authentication and session management | Completed |
+| **3** | Workspace and membership management | Ready to begin |
 | **2** | Authentication and session management | Not started |
 | **3** | Workspace and membership management (002) | Not started |
 | **4** | Project management and domain event bus (003) | Not started |

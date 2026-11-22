@@ -1,0 +1,92 @@
+/* Auth Pages */
+.tb-auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  width: 100%;
+}
+
+.tb-auth-card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.tb-auth-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.tb-auth-subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-6);
+}
+
+.tb-form-actions {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.tb-form-actions .tb-btn {
+  width: 100%;
+}
+
+.tb-auth-links {
+  margin-top: var(--space-6);
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Settings Page */
+.tb-settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.tb-settings-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.tb-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tb-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tb-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tb-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg);
+}
+
+.tb-text-muted {
+  color: var(--text-muted);
+}
+
+.tb-text-sm {
+  font-size: 0.75rem;
+}

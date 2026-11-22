@@ -6,22 +6,25 @@
   <title>TeamBoard</title>
   <link rel="stylesheet" href="/assets/css/tokens.css">
   <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/pages.css">
 </head>
 <body>
   <div id="app" class="tb-app-shell">
+    <!-- Router renders views dynamically into #app -->
     <header class="tb-header">
       <div class="tb-header-inner">
-        <h1 class="tb-logo">TeamBoard</h1>
+        <h1 class="tb-logo"><a href="/">TeamBoard</a></h1>
       </div>
     </header>
     <main class="tb-main">
       <div class="tb-card tb-status-card">
-        <h2 id="status-title">Checking status...</h2>
-        <p id="status-message">Connecting to the TeamBoard API...</p>
-        <div id="status-badge" class="tb-badge">Pending</div>
+        <h2>Loading TeamBoard...</h2>
       </div>
     </main>
   </div>
+  <div id="toast-container" class="tb-toast-container"></div>
   <script type="module" src="/js/main.js"></script>
 </body>
 </html>

@@ -98,9 +98,20 @@ export function getDb() {
   return dbInstance;
 }
 
+export function setDb(db) {
+  if (dbInstance && dbInstance !== db) {
+    try {
+      dbInstance.close();
+    } catch (e) {}
+  }
+  dbInstance = db;
+}
+
 export function closeDb() {
   if (dbInstance) {
-    dbInstance.close();
+    try {
+      dbInstance.close();
+    } catch (e) {}
     dbInstance = null;
   }
 }
