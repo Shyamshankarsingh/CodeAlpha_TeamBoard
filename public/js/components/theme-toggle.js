@@ -1,6 +1,8 @@
 import { h } from '../lib/dom.js';
 
 export function themeToggle() {
+  let btn = null;
+
   function getPreferredTheme() {
     const saved = localStorage.getItem('tb_theme');
     if (saved === 'dark' || saved === 'light') return saved;
@@ -10,13 +12,15 @@ export function themeToggle() {
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('tb_theme', theme);
-    updateIcon();
+    if (btn) {
+      updateIcon();
+    }
   }
 
   let currentTheme = getPreferredTheme();
-  applyTheme(currentTheme);
+  document.documentElement.setAttribute('data-theme', currentTheme);
 
-  const btn = h(
+  btn = h(
     'button',
     {
       type: 'button',
@@ -32,6 +36,7 @@ export function themeToggle() {
   );
 
   function updateIcon() {
+    if (!btn) return;
     btn.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
     btn.setAttribute('aria-label', `Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`);
     btn.setAttribute('title', `Switch to ${currentTheme === 'dark' ? 'light' : 'dark'} mode`);

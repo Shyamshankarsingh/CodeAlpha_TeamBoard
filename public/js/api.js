@@ -58,7 +58,7 @@ export async function api(endpoint, options = {}) {
     );
 
     // If unauthenticated, clear session state and redirect
-    if (response.status === 401 && !endpoint.includes('/api/auth/login')) {
+    if (response.status === 401 && !endpoint.includes('/api/auth/login') && !endpoint.includes('/api/auth/me')) {
       store.setUser(null, null);
       if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         window.history.pushState(null, '', '/login');
