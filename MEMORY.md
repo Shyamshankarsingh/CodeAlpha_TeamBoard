@@ -7,15 +7,16 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 2 complete and verified. Ready for Phase 3 approval.
+- **Stage:** Phase 3 complete and verified. Ready for Phase 4 approval.
 - **Code:**
-  - Full authentication module (`/api/auth`): register, login with Argon2id and session rotation, logout, me, email verification, forgot/reset password, change password, session listing & revocation.
-  - Brute-force protection: 5-attempt account lockout (15 minutes), timing-safe dummy hash verification on unknown emails, rate limiters.
-  - Security middleware: Session loader with idle/absolute timeouts, constant-time CSRF token verification, and mutation Origin checks.
-  - User profile management (`/api/users`): profile update with IANA timezone validation, theme switching, and user search.
-  - Frontend SPA: Vanilla ES module architecture with History router, reactive store, safe `h()` DOM builder (zero `innerHTML`), accessible auth pages (login, register, forgot/reset, verify, settings).
-- **Tests:** 47 tests passing across 10 suites (`npm test`).
-- **Repository:** Git repository clean at `phase-1`.
+  - Workspace management (`/api/workspaces`): workspace CRUD, ownership transfer, last-owner invariant protection.
+  - Workspace memberships: role matrix enforcement (Owner, Admin, Member, Viewer), member listing with email redaction for non-admins, role updates, member removal / leave workspace.
+  - Workspace invitations (`/api/invitations`): 7-day expiring hashed invitations, email delivery, public invitation preview, email-matching acceptance validation, duplicate rejection.
+  - Centralized permission rules: [server/lib/permissions.js](file:///e:/projectanagement/server/lib/permissions.js) implementing the matrix from `SECURITY.md`.
+  - Database migration: `002_workspaces.sql` creating `workspaces`, `workspace_members`, `workspace_invitations`.
+  - Frontend UI: App shell with interactive sidebar, workspace switcher, avatar generation with initials, workspace creation dialog, workspace settings page with danger zone, members management table, and invitation acceptance flow.
+- **Tests:** 59 tests passing across 12 suites (`npm test`).
+- **Repository:** Clean at `phase-2`.
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -28,7 +29,8 @@ Context for coding sessions. Update at the end of every phase.
 | **0** | Foundation, config, health, security headers | Completed |
 | **1** | Database architecture, migrations (001), spikes | Completed |
 | **2** | Authentication and session management | Completed |
-| **3** | Workspace and membership management | Ready to begin |
+| **3** | Workspace and membership management | Completed |
+| **4** | Project management | Ready to begin |
 | **2** | Authentication and session management | Not started |
 | **3** | Workspace and membership management (002) | Not started |
 | **4** | Project management and domain event bus (003) | Not started |

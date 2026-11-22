@@ -33,7 +33,7 @@ describe('Database Migrations & Schema (001_identity)', () => {
     db = createDatabase(dbPath);
     const applied = runMigrations(db);
 
-    assert.equal(applied.length, 1);
+    assert.ok(applied.length >= 1);
     assert.equal(applied[0].name, '001_identity.sql');
 
     // Verify WAL mode
@@ -55,7 +55,7 @@ describe('Database Migrations & Schema (001_identity)', () => {
 
     db = createDatabase(dbPath);
     const firstRun = runMigrations(db);
-    assert.equal(firstRun.length, 1);
+    assert.ok(firstRun.length >= 1);
 
     const secondRun = runMigrations(db);
     assert.equal(secondRun.length, 0);

@@ -5,6 +5,7 @@ let state = {
   csrfToken: null,
   theme: localStorage.getItem('tb_theme') || 'system',
   workspaces: [],
+  currentWorkspaceId: localStorage.getItem('tb_workspace_id') || null,
   toast: null,
 };
 
@@ -38,6 +39,16 @@ export const store = {
     state.csrfToken = csrfToken;
     if (user && user.theme) {
       this.setTheme(user.theme);
+    }
+    notify();
+  },
+
+  setCurrentWorkspace(workspaceId) {
+    state.currentWorkspaceId = workspaceId;
+    if (workspaceId) {
+      localStorage.setItem('tb_workspace_id', workspaceId);
+    } else {
+      localStorage.removeItem('tb_workspace_id');
     }
     notify();
   },
