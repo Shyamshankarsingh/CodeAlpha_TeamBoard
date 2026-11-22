@@ -16,10 +16,13 @@ import { ProjectsPage } from './pages/projects.js';
 import { ProjectDetailPage } from './pages/project-detail.js';
 import { BoardPage } from './pages/board.js';
 import { DashboardPage } from './pages/dashboard.js';
-import { sidebar } from './components/sidebar.js';
+import { LandingPage } from './pages/landing.js';
+import { sidebar, closeMobileSidebar, openMobileSidebar } from './components/sidebar.js';
 import { renderToast } from './components/toast.js';
 import { socketClient } from './lib/socket.js';
 import { notificationsMenu } from './components/notifications-menu.js';
+import { themeToggle } from './components/theme-toggle.js';
+import { initGlobalShortcuts } from './lib/shortcuts.js';
 
 let unreadCount = 0;
 let activeNotificationsMenu = null;
@@ -122,6 +125,7 @@ function AppShell(content, showSidebar = true) {
           h(
             'nav',
             { className: 'tb-nav' },
+            themeToggle(),
             user
               ? [
                   renderNotificationBell(),
@@ -154,10 +158,14 @@ function AppShell(content, showSidebar = true) {
     );
   }
 
-  // App shell with Sidebar
+  // App shell with Sidebar (and mobile drawer backdrop)
   return h(
     'div',
     { className: 'tb-app-shell tb-with-sidebar' },
+    h('div', {
+      className: 'tb-sidebar-backdrop',
+      onclick: closeMobileSidebar,
+    }),
     sidebar(),
     h(
       'div',
@@ -165,10 +173,25 @@ function AppShell(content, showSidebar = true) {
       h(
         'header',
         { className: 'tb-topbar' },
-        h('div', { className: 'tb-topbar-title' }, 'TeamBoard'),
+        h(
+          'div',
+          { className: 'tb-topbar-left' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'tb-btn tb-btn-ghost tb-menu-toggle',
+              'aria-label': 'Open navigation drawer',
+              onclick: openMobileSidebar,
+            },
+            '☰'
+          ),
+          h('div', { className: 'tb-topbar-title' }, 'TeamBoard')
+        ),
         h(
           'div',
           { className: 'tb-topbar-actions' },
+          themeToggle(),
           renderNotificationBell(),
           h('a', { href: '/settings', className: 'tb-btn tb-btn-ghost tb-btn-sm' }, 'Profile & Sessions'),
           h(
@@ -258,13 +281,16 @@ store.subscribe(() => {
 // Configure client routes
 router
   .on('/', () => {
-    const { workspaces, currentWorkspaceId } = store.getState();
+    const { user, workspaces, currentWorkspaceId } = store.getState();
+    if (!user) {
+      return LandingPage();
+    }
     if (workspaces.length > 0) {
       const targetId = currentWorkspaceId || workspaces[0].id;
       return AppShell(DashboardPage({ workspaceId: targetId }));
     }
     return AppShell(NoWorkspacePage(), false);
-  }, { requiresAuth: true })
+  }, { requiresAuth: false })
   .on('/w/:workspaceId', (params) => AppShell(DashboardPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/dashboard', (params) => AppShell(DashboardPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/projects', (params) => AppShell(ProjectsPage(params)), { requiresAuth: true })
@@ -332,6 +358,7 @@ async function init() {
   }
 
   router.init();
+  initGlobalShortcuts();
 }
 
 document.addEventListener('DOMContentLoaded', init);

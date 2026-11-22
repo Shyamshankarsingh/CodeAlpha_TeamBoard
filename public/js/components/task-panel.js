@@ -606,6 +606,7 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
   modal = dialog({
     title: 'Task Details',
     content: contentContainer,
+    className: 'tb-task-panel-dialog',
   });
 
   loadData();

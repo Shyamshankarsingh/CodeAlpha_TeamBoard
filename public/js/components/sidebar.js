@@ -2,6 +2,20 @@ import { h } from '../lib/dom.js';
 import { store } from '../store.js';
 import { router } from '../router.js';
 
+export function closeMobileSidebar() {
+  const sidebarEl = document.querySelector('.tb-sidebar');
+  const backdropEl = document.querySelector('.tb-sidebar-backdrop');
+  if (sidebarEl) sidebarEl.classList.remove('is-open');
+  if (backdropEl) backdropEl.classList.remove('is-open');
+}
+
+export function openMobileSidebar() {
+  const sidebarEl = document.querySelector('.tb-sidebar');
+  const backdropEl = document.querySelector('.tb-sidebar-backdrop');
+  if (sidebarEl) sidebarEl.classList.add('is-open');
+  if (backdropEl) backdropEl.classList.add('is-open');
+}
+
 export function sidebar() {
   const { workspaces, currentWorkspaceId, user } = store.getState();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId) || workspaces[0];
@@ -10,8 +24,10 @@ export function sidebar() {
     'select',
     {
       className: 'tb-select tb-ws-switcher',
+      'aria-label': 'Select Workspace',
       onchange: (e) => {
         const selectedId = e.target.value;
+        closeMobileSidebar();
         if (selectedId === '__create__') {
           router.navigate('/workspaces/new');
         } else {
@@ -35,8 +51,9 @@ export function sidebar() {
       {
         href,
         className: `tb-sidebar-link ${isActive ? 'active' : ''}`,
+        onclick: () => closeMobileSidebar(),
       },
-      h('span', { className: 'tb-sidebar-icon' }, icon),
+      h('span', { className: 'tb-sidebar-icon', 'aria-hidden': 'true' }, icon),
       h('span', { className: 'tb-sidebar-label' }, label)
     );
   }
@@ -45,11 +62,25 @@ export function sidebar() {
 
   return h(
     'aside',
-    { className: 'tb-sidebar' },
+    { className: 'tb-sidebar', 'aria-label': 'Sidebar Navigation' },
     h(
       'div',
       { className: 'tb-sidebar-header' },
-      h('div', { className: 'tb-sidebar-ws-label' }, 'WORKSPACE'),
+      h(
+        'div',
+        { style: 'display: flex; justify-content: space-between; align-items: center;' },
+        h('div', { className: 'tb-sidebar-ws-label' }, 'WORKSPACE'),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'tb-sidebar-mobile-close tb-btn tb-btn-ghost tb-btn-sm',
+            'aria-label': 'Close sidebar drawer',
+            onclick: closeMobileSidebar,
+          },
+          '✕'
+        )
+      ),
       wsSelect
     ),
     h(

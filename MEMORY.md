@@ -7,19 +7,28 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 12 complete and verified. Ready for Phase 13 approval.
+- **Stage:** Phase 13 complete and verified. Ready for Phase 14 approval.
 - **Code:**
-  - Security Hardening & Controls (`tests/integration/security.test.js`):
-    - `SEC-C1..C5`: Mutation safeguards verified. Missing or invalid `X-CSRF-Token` rejected (403), untrusted `Origin` rejected (403), non-JSON `Content-Type` on mutation bodies rejected with 415 (`UNSUPPORTED_MEDIA_TYPE`), and safe reads (GET) verified without CSRF/Origin requirements.
-    - `SEC-I`: Complete IDOR sweep across all entities (workspaces, projects, boards, columns, tasks, comments, notifications). Unpermitted cross-tenant and cross-project accesses return 404 (preventing existence leakage).
-    - `SEC-P`: Role permission matrix strictly enforced on server across all roles (Owner, Admin, Member, Viewer, Lead). Viewers strictly blocked from mutating tasks, comments, or workspaces (403). Private projects strictly hidden from workspace members without explicit project membership (404).
-    - `SEC-S`: SQL injection attack payloads fuzzed across search and filters; verified parameterized statements and strict allowlist on sort parameters (400 validation error on injection).
-    - `SEC-X`: Stored XSS vectors (scripts, event handlers, iframes) safely handled as literal strings without code execution.
-    - `SEC-G`: Codebase static audit verifying zero unsafe DOM sinks (`innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `eval`) across `public/js/`.
-    - Security headers verified: strict CSP (`default-src 'self'`, `script-src 'self'`, `frame-ancestors 'none'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
-    - Dependency audit: `npm audit` confirms 0 vulnerabilities.
-- **Tests:** 157 tests passing across 31 suites (`npm test`).
-- **Repository:** Phase 12 ready to commit (`phase-12: security hardening and comprehensive testing`).
+  - Responsive Design & Viewport Adaptations (`DESIGN.md`):
+    - Mobile (375px–390px): Off-canvas navigation drawer with hamburger toggle (`tb-menu-toggle`), slide-over transition, backdrop overlay (`tb-sidebar-backdrop`), horizontal Kanban scroll snap with 85vw columns, full-screen mobile task sheet, and zero horizontal page scroll.
+    - Tablet (769px–1024px): Collapsible icon-rail sidebar (68px width) with centered icons and labels collapsed; 70vw responsive modal sheets.
+    - Desktop (1025px+): Full 250px sidebar with workspace switcher, navigation links, and 520px side task sheet.
+  - Landing Page (`public/js/pages/landing.js`):
+    - High-conversion, portfolio-quality landing page rendered at `/` for guest visitors.
+    - Hero section with live value propositions and direct CTAs ("Get Started Free" -> `/register`, "Sign In" -> `/login`).
+    - 4-column feature highlights grid (Real-Time Kanban, Multi-View Table & Filters, Threaded Discussions, Zero-Trust Security).
+    - Windowed live interactive Kanban preview mockup (To Do, In Progress, Done with priority badges).
+    - Footer with theme toggle, copyright, and keyboard shortcuts guidance.
+  - Theme Switcher (`public/js/components/theme-toggle.js`):
+    - Light/Dark mode switcher button (☀️ / 🌙) in topbar, header, and landing page.
+    - Follows `prefers-color-scheme: dark` by default and persists user choice to `localStorage` (`tb_theme`).
+  - Global Keyboard Shortcuts (`public/js/lib/shortcuts.js` & `public/js/components/shortcuts-modal.js`):
+    - Implemented global hotkeys: `/` (focus search), `c` (create task), `?` (show shortcuts dialog), `Esc` (close open modal/panel), and `g` chords (`g b` for Board, `g l` for List, `g i` for Notifications inbox).
+    - Accessible shortcuts help modal with `<kbd>` badges.
+  - Accessibility & Focus Trapping (`public/js/components/dialog.js`):
+    - Modal dialogs trap keyboard focus (`Tab` and `Shift+Tab`), focus initial control on opening, restore previous focus on close, and dismiss on `Escape`.
+- **Tests:** 162 tests passing across 32 suites (`npm test`).
+- **Repository:** Phase 13 ready to commit (`phase-13: responsive design and ux refinement`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -43,5 +52,5 @@ Context for coding sessions. Update at the end of every phase.
 | **11a** | List view, filters, search (MVP) | Completed |
 | **11b** | Extras (FTS5 search, attachments, bulk, export) | Not started |
 | **12** | Security hardening and comprehensive testing | Completed |
-| **13** | Responsive design and UX refinement | Ready to begin |
-| **14** | Deployment and production readiness | Not started |
+| **13** | Responsive design and UX refinement | Completed |
+| **14** | Deployment and production readiness | Ready to begin |
