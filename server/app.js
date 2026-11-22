@@ -27,6 +27,10 @@ import {
 import { taskCommentsRouter, commentsRouter } from './modules/comments/routes.js';
 import { notificationsRouter } from './modules/notifications/routes.js';
 import { workspaceDashboardRouter } from './modules/dashboard/routes.js';
+import { attachmentsRouter } from './modules/attachments/routes.js';
+import { searchRouter } from './modules/search/routes.js';
+import { dependenciesRouter } from './modules/dependencies/routes.js';
+import { exportRouter } from './modules/export/routes.js';
 import { getDb } from './db/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -108,6 +112,10 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/tasks/:taskId/comments', taskCommentsRouter);
   app.use('/api/comments', commentsRouter);
   app.use('/api/notifications', notificationsRouter);
+  app.use('/api', attachmentsRouter);
+  app.use('/api', searchRouter);
+  app.use('/api', dependenciesRouter);
+  app.use('/api', exportRouter);
 
   // 10. 404 & SPA fallback
   app.use(notFound(publicDir));

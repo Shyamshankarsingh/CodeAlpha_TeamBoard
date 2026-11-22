@@ -9,6 +9,8 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
   let workspaceMembers = [];
   let projectLabels = [];
   let comments = [];
+  let attachments = [];
+  let dependencies = { blockedBy: [], blocks: [] };
   let modal = null;
 
   const contentContainer = h('div', { className: 'tb-task-panel-content' });
@@ -19,6 +21,13 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
       workspaceMembers = await api(`/api/workspaces/${task.workspaceId}/members`);
       projectLabels = await api(`/api/projects/${task.projectId}/labels`);
       comments = await api(`/api/tasks/${taskId}/comments`);
+      try {
+        const attRes = await api(`/api/tasks/${taskId}/attachments`);
+        attachments = attRes.attachments || [];
+      } catch {}
+      try {
+        dependencies = await api(`/api/tasks/${taskId}/dependencies`);
+      } catch {}
       render();
     } catch (err) {
       store.setToast(err.message || 'Failed to load task details', 'error');
@@ -596,10 +605,126 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
       )
     );
 
+    // Attachments Section
+    const fileInput = h('input', { type: 'file', style: 'display: none;' });
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/attachments`, {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': store.get('csrfToken') },
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message || 'Upload failed');
+        }
+        const data = await res.json();
+        attachments.unshift(data.attachment);
+        store.setToast('File attached', 'success');
+        render();
+      } catch (err) {
+        store.setToast(err.message, 'error');
+      }
+    });
+
+    const attachmentsSection = h('div', { className: 'tb-panel-section', style: 'margin-top: var(--space-6);' }, [
+      h('div', { style: 'display: flex; justify-content: space-between; align-items: center;' }, [
+        h('h4', { className: 'tb-section-title' }, [`Attachments (${attachments.length})`]),
+        h('button', {
+          type: 'button',
+          className: 'tb-btn tb-btn-outline tb-btn-sm',
+          onclick: () => fileInput.click(),
+        }, ['+ Attach File']),
+      ]),
+      fileInput,
+      h('div', { className: 'tb-attachments-list', style: 'display: flex; flex-direction: column; gap: 8px; margin-top: 8px;' },
+        attachments.map(att =>
+          h('div', { style: 'display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--color-bg-secondary); border-radius: var(--radius-sm); font-size: 0.85rem;' }, [
+            h('a', {
+              href: `/api/attachments/${att.id}/download`,
+              style: 'color: var(--color-primary); text-decoration: none; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;',
+              download: att.fileName,
+            }, [att.fileName]),
+            h('div', { style: 'display: flex; align-items: center; gap: 8px;' }, [
+              h('span', { style: 'color: var(--color-text-muted); font-size: 0.75rem;' }, [
+                `${Math.round(att.fileSize / 1024)} KB`
+              ]),
+              h('button', {
+                type: 'button',
+                className: 'tb-btn tb-btn-ghost tb-btn-sm',
+                style: 'color: var(--color-danger); padding: 0 4px; line-height: 1;',
+                onclick: async () => {
+                  if (!confirm(`Delete ${att.fileName}?`)) return;
+                  try {
+                    await api(`/api/attachments/${att.id}`, { method: 'DELETE' });
+                    attachments = attachments.filter(a => a.id !== att.id);
+                    store.setToast('Attachment deleted', 'success');
+                    render();
+                  } catch (err) {
+                    store.setToast(err.message || 'Failed to delete attachment', 'error');
+                  }
+                },
+              }, ['×']),
+            ]),
+          ])
+        )
+      ),
+    ]);
+
+    // Dependencies Section
+    const dependenciesSection = h('div', { className: 'tb-panel-section', style: 'margin-top: var(--space-6);' }, [
+      h('h4', { className: 'tb-section-title' }, ['Dependencies']),
+      h('div', { style: 'margin-top: 6px;' }, [
+        h('span', { style: 'font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);' }, ['Blocked by:']),
+        (dependencies.blockedBy && dependencies.blockedBy.length > 0)
+          ? h('div', { style: 'display: flex; flex-direction: column; gap: 6px; margin-top: 4px;' },
+              dependencies.blockedBy.map(dep =>
+                h('div', { style: 'display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; padding: 4px 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm);' }, [
+                  h('span', {}, [dep.title]),
+                  h('button', {
+                    type: 'button',
+                    className: 'tb-btn tb-btn-ghost tb-btn-sm',
+                    style: 'color: var(--color-danger); padding: 0 4px;',
+                    onclick: async () => {
+                      try {
+                        await api(`/api/dependencies/${dep.dependencyId}`, { method: 'DELETE' });
+                        dependencies.blockedBy = dependencies.blockedBy.filter(d => d.dependencyId !== dep.dependencyId);
+                        store.setToast('Dependency removed', 'success');
+                        render();
+                      } catch (err) {
+                        store.setToast(err.message || 'Failed to remove dependency', 'error');
+                      }
+                    },
+                  }, ['×']),
+                ])
+              )
+            )
+          : h('p', { style: 'font-size: 0.8rem; color: var(--color-text-muted); margin: 4px 0;' }, ['No blocking tasks']),
+      ]),
+      (dependencies.blocks && dependencies.blocks.length > 0)
+        ? h('div', { style: 'margin-top: 8px;' }, [
+            h('span', { style: 'font-size: 0.8rem; font-weight: 600; color: var(--color-text-muted);' }, ['Blocks:']),
+            h('div', { style: 'display: flex; flex-direction: column; gap: 6px; margin-top: 4px;' },
+              dependencies.blocks.map(b =>
+                h('div', { style: 'font-size: 0.85rem; padding: 4px 8px; background: var(--color-bg-secondary); border-radius: var(--radius-sm);' }, [
+                  b.title
+                ])
+              )
+            ),
+          ])
+        : null,
+    ]);
+
     contentContainer.appendChild(mainForm);
     contentContainer.appendChild(assigneesSection);
     contentContainer.appendChild(labelsSection);
     contentContainer.appendChild(subtasksSection);
+    contentContainer.appendChild(attachmentsSection);
+    contentContainer.appendChild(dependenciesSection);
     contentContainer.appendChild(footerActions);
   }
 

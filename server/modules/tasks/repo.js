@@ -368,6 +368,38 @@ export const tasksRepo = {
     return result.changes > 0;
   },
 
+  bulkMoveTasks(taskIds, columnId, completedAt, now = new Date().toISOString()) {
+    if (!taskIds || taskIds.length === 0) return 0;
+    const db = getDb();
+    const placeholders = taskIds.map(() => '?').join(', ');
+    const result = db.prepare(`
+      UPDATE tasks
+      SET column_id = ?, completed_at = ?, version = version + 1, updated_at = ?
+      WHERE id IN (${placeholders})
+    `).run(columnId, completedAt, now, ...taskIds);
+    return result.changes;
+  },
+
+  bulkArchiveTasks(taskIds, archivedAt, now = new Date().toISOString()) {
+    if (!taskIds || taskIds.length === 0) return 0;
+    const db = getDb();
+    const placeholders = taskIds.map(() => '?').join(', ');
+    const result = db.prepare(`
+      UPDATE tasks
+      SET archived_at = ?, version = version + 1, updated_at = ?
+      WHERE id IN (${placeholders})
+    `).run(archivedAt, now, ...taskIds);
+    return result.changes;
+  },
+
+  bulkDeleteTasks(taskIds) {
+    if (!taskIds || taskIds.length === 0) return 0;
+    const db = getDb();
+    const placeholders = taskIds.map(() => '?').join(', ');
+    const result = db.prepare(`DELETE FROM tasks WHERE id IN (${placeholders})`).run(...taskIds);
+    return result.changes;
+  },
+
   // Assignees
   getTaskAssignees(taskId) {
     const db = getDb();

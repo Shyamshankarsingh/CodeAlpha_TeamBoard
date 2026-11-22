@@ -87,3 +87,10 @@ export const listProjectTasksQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(25),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
+
+export const bulkTaskActionSchema = z.object({
+  taskIds: z.array(z.string().uuid()).min(1).max(100),
+  action: z.enum(['move', 'assign', 'archive', 'delete']),
+  columnId: z.string().uuid().optional(),
+  assigneeIds: z.array(z.string().uuid()).optional(),
+});

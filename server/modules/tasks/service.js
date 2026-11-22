@@ -844,4 +844,58 @@ export const tasksService = {
     tasksRepo.removeWatcher(taskId, userId);
     return { success: true };
   },
+
+  // Bulk Operations
+  bulkAction(userId, projectId, { taskIds, action, columnId, assigneeIds }) {
+    const project = projectsRepo.findProjectById(projectId);
+    if (!project) throw new AppError('NOT_FOUND', 404, 'Project not found');
+
+    const workspaceId = project.workspace_id || project.workspaceId;
+    const membership = workspacesRepo.findMembership(workspaceId, userId);
+    if (!membership) throw new AppError('NOT_FOUND', 404, 'Project not found');
+
+    const projMember = projectsRepo.findProjectMember(projectId, userId);
+    if (!permissions.canViewProject(membership.role, project.visibility, projMember)) {
+      throw new AppError('NOT_FOUND', 404, 'Project not found');
+    }
+
+    if (!permissions.canEditTask(membership.role)) {
+      throw new AppError('FORBIDDEN', 403, 'Permission denied');
+    }
+
+    const db = getDb();
+    let updatedCount = 0;
+
+    const execute = db.transact(() => {
+      // Filter tasks belonging to project
+      const validTaskIds = taskIds.filter(id => {
+        const t = tasksRepo.findTaskById(id);
+        return t && t.projectId === projectId;
+      });
+
+      if (action === 'move' && columnId) {
+        const col = boardsRepo.findColumnById(columnId);
+        if (col && col.project_id === projectId) {
+          const completedAt = col.category === 'done' ? new Date().toISOString() : null;
+          updatedCount = tasksRepo.bulkMoveTasks(validTaskIds, columnId, completedAt);
+        }
+      } else if (action === 'archive') {
+        updatedCount = tasksRepo.bulkArchiveTasks(validTaskIds, new Date().toISOString());
+      } else if (action === 'delete') {
+        const allowedTaskIds = validTaskIds.filter(id => {
+          const t = tasksRepo.findTaskById(id);
+          return permissions.canDeleteTask(membership.role, projMember?.role, t.reporterId, userId);
+        });
+        updatedCount = tasksRepo.bulkDeleteTasks(allowedTaskIds);
+      } else if (action === 'assign' && assigneeIds) {
+        for (const taskId of validTaskIds) {
+          tasksRepo.setTaskAssignees(taskId, assigneeIds);
+          updatedCount++;
+        }
+      }
+    });
+
+    execute();
+    return { success: true, count: updatedCount };
+  },
 };

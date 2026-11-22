@@ -28,7 +28,85 @@ export function taskTable({
   onSort = () => {},
   onPageChange = () => {},
   onTaskClick = () => {},
+  columns = [],
+  onBulkAction = () => {},
 }) {
+  const selectedIds = new Set();
+  const bulkBar = h('div', {
+    className: 'tb-bulk-bar',
+    style: 'display: none; padding: 8px 12px; margin-bottom: 8px; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 6px; align-items: center; justify-content: space-between; font-size: 0.85rem;',
+  });
+
+  function updateBulkBar() {
+    if (selectedIds.size === 0) {
+      bulkBar.style.display = 'none';
+      bulkBar.replaceChildren();
+      return;
+    }
+
+    bulkBar.style.display = 'flex';
+    const countSpan = h('span', { style: 'font-weight: 600;' }, [`${selectedIds.size} task(s) selected`]);
+
+    const colSelect = h('select', { className: 'tb-select tb-select-sm', style: 'padding: 2px 6px; font-size: 0.8rem;' }, [
+      h('option', { value: '' }, ['Move to column...']),
+      ...columns.map(c => h('option', { value: c.id }, [c.name]))
+    ]);
+
+    const moveBtn = h('button', {
+      type: 'button',
+      className: 'tb-btn tb-btn-outline tb-btn-sm',
+      onclick: () => {
+        if (!colSelect.value) return;
+        onBulkAction(Array.from(selectedIds), 'move', colSelect.value);
+        selectedIds.clear();
+        updateBulkBar();
+      },
+    }, ['Move']);
+
+    const archiveBtn = h('button', {
+      type: 'button',
+      className: 'tb-btn tb-btn-ghost tb-btn-sm',
+      onclick: () => {
+        onBulkAction(Array.from(selectedIds), 'archive');
+        selectedIds.clear();
+        updateBulkBar();
+      },
+    }, ['Archive']);
+
+    const deleteBtn = h('button', {
+      type: 'button',
+      className: 'tb-btn tb-btn-danger tb-btn-sm',
+      onclick: () => {
+        if (!confirm(`Delete ${selectedIds.size} selected tasks?`)) return;
+        onBulkAction(Array.from(selectedIds), 'delete');
+        selectedIds.clear();
+        updateBulkBar();
+      },
+    }, ['Delete']);
+
+    const clearBtn = h('button', {
+      type: 'button',
+      className: 'tb-btn tb-btn-ghost tb-btn-sm',
+      onclick: () => {
+        selectedIds.clear();
+        table.querySelectorAll('.tb-task-select-cb').forEach(cb => { cb.checked = false; });
+        const allCb = table.querySelector('.tb-select-all-cb');
+        if (allCb) allCb.checked = false;
+        updateBulkBar();
+      },
+    }, ['Clear Selection']);
+
+    const actions = h('div', { style: 'display: flex; gap: 8px; align-items: center;' }, [
+      colSelect,
+      moveBtn,
+      archiveBtn,
+      deleteBtn,
+      clearBtn,
+    ]);
+
+    bulkBar.replaceChildren(countSpan, actions);
+  }
+
   function renderSortHeader(label, field) {
     const isCurrent = sortBy === field;
     const arrow = isCurrent ? (sortDir === 'asc' ? '▲' : '▼') : '↕';
@@ -67,6 +145,22 @@ export function taskTable({
       h(
         'tr',
         {},
+        h('th', { style: 'width: 40px; text-align: center;' }, [
+          h('input', {
+            type: 'checkbox',
+            className: 'tb-select-all-cb',
+            'aria-label': 'Select all tasks',
+            onchange: (e) => {
+              const checked = e.target.checked;
+              selectedIds.clear();
+              if (checked) {
+                tasks.forEach(t => selectedIds.add(t.id));
+              }
+              table.querySelectorAll('.tb-task-select-cb').forEach(cb => { cb.checked = checked; });
+              updateBulkBar();
+            },
+          })
+        ]),
         renderSortHeader('Title', 'title'),
         h('th', { scope: 'col' }, 'Status'),
         renderSortHeader('Priority', 'priority'),
@@ -85,7 +179,7 @@ export function taskTable({
             {},
             h(
               'td',
-              { colSpan: 7, className: 'tb-empty-cell' },
+              { colSpan: 8, className: 'tb-empty-cell' },
               h(
                 'div',
                 { className: 'tb-empty-state' },
@@ -116,6 +210,21 @@ export function taskTable({
                   }
                 },
               },
+              // 0. Checkbox cell
+              h('td', { style: 'width: 40px; text-align: center;' }, [
+                h('input', {
+                  type: 'checkbox',
+                  className: 'tb-task-select-cb',
+                  checked: selectedIds.has(task.id),
+                  'aria-label': `Select task ${task.title}`,
+                  onclick: (e) => {
+                    e.stopPropagation();
+                    if (e.target.checked) selectedIds.add(task.id);
+                    else selectedIds.delete(task.id);
+                    updateBulkBar();
+                  },
+                })
+              ]),
               // 1. Title cell
               h(
                 'td',
@@ -254,6 +363,7 @@ export function taskTable({
   return h(
     'div',
     { className: 'tb-task-table-wrapper' },
+    bulkBar,
     h('div', { className: 'tb-table-card' }, table),
     pagination
   );

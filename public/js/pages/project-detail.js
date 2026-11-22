@@ -395,6 +395,15 @@ export function ProjectDetailPage(params) {
           { href: `/w/${wsId}/p/${projectId}/board`, className: 'tb-btn tb-btn-primary tb-btn-sm' },
           '📋 Open Board'
         ),
+        h(
+          'a',
+          {
+            href: `/api/projects/${projectId}/export?format=csv`,
+            className: 'tb-btn tb-btn-outline tb-btn-sm',
+            download: `${project.name}-tasks.csv`,
+          },
+          '📥 Export CSV'
+        ),
         perms.canEdit
           ? h(
               'button',

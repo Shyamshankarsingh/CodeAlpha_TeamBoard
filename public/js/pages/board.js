@@ -630,6 +630,19 @@ export function BoardPage(params) {
             columns,
             onUpdated: refreshData,
           }),
+        columns,
+        onBulkAction: async (taskIds, action, columnId) => {
+          try {
+            await api(`/api/projects/${projectId}/tasks/bulk`, {
+              method: 'POST',
+              body: { taskIds, action, columnId },
+            });
+            store.setToast('Bulk action applied successfully', 'success');
+            refreshData();
+          } catch (err) {
+            store.setToast(err.message || 'Bulk action failed', 'error');
+          }
+        },
       });
       container.appendChild(tableEl);
     } else {

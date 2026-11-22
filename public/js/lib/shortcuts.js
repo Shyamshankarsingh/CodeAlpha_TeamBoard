@@ -1,4 +1,5 @@
 import { openShortcutsDialog } from '../components/shortcuts-modal.js';
+import { openSearchDialog } from '../components/search-modal.js';
 import { router } from '../router.js';
 
 let pendingChord = null;
@@ -69,13 +70,15 @@ export function initGlobalShortcuts() {
       return;
     }
 
-    // Action: '/' -> Focus search input
+    // Action: '/' -> Open search dialog or focus search input
     if (e.key === '/') {
+      e.preventDefault();
       const searchInput = document.querySelector('.tb-filter-search, input[type="search"]');
-      if (searchInput) {
-        e.preventDefault();
+      if (searchInput && document.body.contains(searchInput)) {
         searchInput.focus();
         if (searchInput.select) searchInput.select();
+      } else {
+        openSearchDialog();
       }
       return;
     }

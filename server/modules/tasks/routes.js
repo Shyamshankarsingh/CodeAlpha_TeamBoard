@@ -12,6 +12,7 @@ import {
   updateSubtaskSchema,
   moveSubtaskSchema,
   listProjectTasksQuerySchema,
+  bulkTaskActionSchema,
 } from './schema.js';
 import { validate } from '../../middleware/validate.js';
 import { requireAuth } from '../../middleware/session.js';
@@ -24,6 +25,15 @@ export const labelsRouter = Router();
 export const subtasksRouter = Router();
 
 // Project-scoped tasks (/api/projects/:pid/tasks)
+projectTasksRouter.post('/bulk', requireAuth, validate(bulkTaskActionSchema), (req, res, next) => {
+  try {
+    const result = tasksService.bulkAction(req.user.id, req.params.pid, req.body);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 projectTasksRouter.get('/', requireAuth, validate(listProjectTasksQuerySchema, 'query'), (req, res, next) => {
   try {
     const result = tasksService.listProjectTasks(req.user.id, req.params.pid, req.query);

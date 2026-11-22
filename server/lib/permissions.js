@@ -131,4 +131,16 @@ export const permissions = {
     if (authorId === userId && ['owner', 'admin', 'member'].includes(workspaceRole)) return true;
     return false;
   },
+
+  // Attachment Permissions
+  canUploadAttachment(workspaceRole) {
+    return ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canDeleteAttachment(workspaceRole, projectRole, uploaderId, userId) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    if (projectRole === 'lead') return true;
+    if (uploaderId === userId && ['owner', 'admin', 'member'].includes(workspaceRole)) return true;
+    return false;
+  },
 };

@@ -7,25 +7,32 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 14 complete and verified. All core roadmap phases (0 through 14) are fully implemented and verified.
+- **Stage:** Phase 11b (Extras) complete and verified. 100% of all roadmap phases (0 through 14 + 11b) are fully implemented and verified.
 - **Code:**
-  - Online SQLite Backups (`scripts/backup.js`):
-    - Non-blocking online database backup using `better-sqlite3` `db.backup()`.
-    - SQLite integrity check via `PRAGMA integrity_check` before marking backup valid.
-    - Automated retention policy pruning keeping the 10 most recent backups.
-    - CLI script executable standalone or via `npm run backup`.
-  - Detailed Health & Readiness Endpoint (`server/app.js`):
-    - Backward-compatible basic health check `GET /api/health` returning `{ status: 'ok' }`.
-    - Detailed readiness probe `GET /api/health/ready` verifying live SQLite connectivity, WAL/memory journal mode, process uptime, and memory usage.
-  - Containerization (`Dockerfile` & `.dockerignore`):
-    - Multi-stage minimal Node 22 Alpine build with non-root `node` user.
-    - Volume mounts for `/app/data`, `/app/uploads`, and `/app/backups`.
-    - Built-in container health check probe.
-  - Operational Documentation (`docs/DEPLOYMENT.md` & `README.md`):
-    - Comprehensive production deployment runbook covering Docker, Docker Compose, systemd unit configuration, Nginx reverse proxy with SSL and WebSocket proxying, automated daily cron backups, and disaster recovery procedures.
-    - Full project overview, technology matrix, quickstart, and directory breakdown in `README.md`.
-- **Tests:** 166 tests passing across 33 suites (`npm test`).
-- **Repository:** Phase 14 complete (`phase-14: deployment and production readiness`).
+  - Database Migration 008 (`server/db/migrations/008_extras.sql`):
+    - `attachments`: File metadata with strict foreign keys to tasks and users.
+    - `task_dependencies`: Self-blocking prevention, duplicate prevention, and indexes.
+    - `tasks_fts`: SQLite FTS5 virtual table synchronized via database triggers (`trg_tasks_fts_ai`, `trg_tasks_fts_ad`, `trg_tasks_fts_au`).
+  - Attachments (`server/modules/attachments/`):
+    - Magic bytes signature validation (`server/lib/file-signatures.js`) and mime-type allow-list.
+    - Safe local storage outside webroot in `uploads/` with UUID filenames.
+    - Download handler with `Content-Disposition: attachment` and `X-Content-Type-Options: nosniff`.
+    - Pure DOM attachment manager in `public/js/components/task-panel.js`.
+  - SQLite FTS5 Global Search (`server/modules/search/`):
+    - Full-text search with tokenization and prefix matching.
+    - Workspace and private project permission isolation.
+    - Global search modal palette in `public/js/components/search-modal.js` bound to `/` key.
+  - Task Dependencies (`server/modules/dependencies/`):
+    - Directed graph cycle detection (rejects cycles like A -> B -> A).
+    - Blocked-by and blocks tracking in `public/js/components/task-panel.js`.
+  - Bulk Task Actions (`server/modules/tasks/`):
+    - `POST /api/projects/:projectId/tasks/bulk` for bulk move column, bulk assign, bulk archive, and bulk delete.
+    - Interactive checkbox selection and floating bulk toolbar in `public/js/components/task-table.js`.
+  - Project Data Export (`server/modules/export/`):
+    - RFC 4180 CSV export with escaping and structured JSON export (`GET /api/projects/:projectId/export?format=csv|json`).
+    - Export button in project detail header (`public/js/pages/project-detail.js`).
+- **Tests:** 187 tests passing across 39 suites (`npm test`).
+- **Repository:** Phase 11b complete (`phase-11b: extras - fts5 search, attachments, dependencies, bulk actions, export`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -47,7 +54,7 @@ Context for coding sessions. Update at the end of every phase.
 | **9** | Notification system (007) | Completed |
 | **10** | Dashboard and analytics | Completed |
 | **11a** | List view, filters, search (MVP) | Completed |
-| **11b** | Extras (FTS5 search, attachments, bulk, export) | Deferred / Post-MVP |
+| **11b** | Extras (FTS5 search, attachments, bulk, export) | Completed |
 | **12** | Security hardening and comprehensive testing | Completed |
 | **13** | Responsive design and UX refinement | Completed |
 | **14** | Deployment and production readiness | Completed |
