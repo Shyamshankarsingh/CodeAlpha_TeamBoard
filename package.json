@@ -1,0 +1,24 @@
+{
+  "name": "teamboard",
+  "version": "0.1.0",
+  "description": "Collaborative project management platform",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test tests/**/*.test.js"
+  },
+  "keywords": [
+    "project-management",
+    "kanban",
+    "collaboration"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "zod": "^4.6.7"
+  }
+}

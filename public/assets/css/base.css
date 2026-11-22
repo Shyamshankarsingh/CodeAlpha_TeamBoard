@@ -1,0 +1,108 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  font-size: 1rem;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tb-app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.tb-header {
+  border-bottom: 1px solid var(--border);
+  background-color: var(--surface);
+  padding: var(--space-4) var(--space-6);
+}
+
+.tb-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tb-logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tb-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.tb-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.tb-status-card {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tb-status-card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.tb-status-card p {
+  color: var(--text-muted);
+}
+
+.tb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: var(--border);
+  color: var(--text);
+}
+
+.tb-badge.success {
+  background-color: var(--success);
+  color: #FFFFFF;
+}
+
+.tb-badge.error {
+  background-color: var(--danger);
+  color: #FFFFFF;
+}

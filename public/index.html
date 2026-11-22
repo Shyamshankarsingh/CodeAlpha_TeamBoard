@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamBoard</title>
+  <link rel="stylesheet" href="/assets/css/tokens.css">
+  <link rel="stylesheet" href="/assets/css/base.css">
+</head>
+<body>
+  <div id="app" class="tb-app-shell">
+    <header class="tb-header">
+      <div class="tb-header-inner">
+        <h1 class="tb-logo">TeamBoard</h1>
+      </div>
+    </header>
+    <main class="tb-main">
+      <div class="tb-card tb-status-card">
+        <h2 id="status-title">Checking status...</h2>
+        <p id="status-message">Connecting to the TeamBoard API...</p>
+        <div id="status-badge" class="tb-badge">Pending</div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
