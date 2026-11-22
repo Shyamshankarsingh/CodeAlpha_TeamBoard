@@ -1,4 +1,5 @@
 import { store } from './store.js';
+import { getClientId } from './lib/socket.js';
 
 export class ApiError extends Error {
   constructor(code, status, message, details = []) {
@@ -18,12 +19,15 @@ export async function api(endpoint, options = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  // Attach CSRF token on state-changing requests if present in store
+  // Attach CSRF token and Client ID on state-changing requests
   const method = (options.method || 'GET').toUpperCase();
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
     const csrfToken = store.getState().csrfToken;
     if (csrfToken && !headers.has('X-CSRF-Token')) {
       headers.set('X-CSRF-Token', csrfToken);
+    }
+    if (!headers.has('X-Client-Id')) {
+      headers.set('X-Client-Id', getClientId());
     }
   }
 

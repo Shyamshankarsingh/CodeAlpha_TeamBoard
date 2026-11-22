@@ -3,6 +3,7 @@ import { clearChildren } from './lib/dom.js';
 
 const routes = [];
 let notFoundHandler = null;
+let activeView = null;
 
 export const router = {
   on(pathPattern, handler, options = {}) {
@@ -46,8 +47,16 @@ export const router = {
 
         const appEl = document.getElementById('app');
         if (appEl) {
+          if (activeView && typeof activeView.destroy === 'function') {
+            try {
+              activeView.destroy();
+            } catch (err) {
+              console.error('Error destroying previous view', err);
+            }
+          }
           clearChildren(appEl);
           const view = route.handler(match.params);
+          activeView = view;
           if (view) {
             appEl.appendChild(view);
           }

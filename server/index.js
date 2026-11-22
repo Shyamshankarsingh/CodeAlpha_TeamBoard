@@ -1,8 +1,10 @@
+import http from 'node:http';
 import { createApp } from './app.js';
 import { config } from './config.js';
 import { logger } from './logger.js';
 import { getDb, closeDb } from './db/index.js';
 import { runMigrations } from './db/migrate.js';
+import { initSockets, closeSockets } from './lib/sockets.js';
 
 // Initialize database and run migrations at boot
 const db = getDb();
@@ -12,8 +14,12 @@ if (applied.length > 0) {
 }
 
 const app = createApp(config);
+const server = http.createServer(app);
 
-const server = app.listen(config.PORT, () => {
+// Attach Socket.IO to HTTP server
+initSockets(server, config);
+
+server.listen(config.PORT, () => {
   logger.info(`TeamBoard server running at http://localhost:${config.PORT}`, {
     port: config.PORT,
     env: config.NODE_ENV,
@@ -24,6 +30,7 @@ const server = app.listen(config.PORT, () => {
 // Graceful shutdown handling
 function shutdown(signal) {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
+  closeSockets();
   server.close(() => {
     logger.info('HTTP server closed.');
     closeDb();

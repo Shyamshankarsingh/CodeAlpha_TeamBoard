@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { requestId } from './middleware/requestId.js';
+import { contextMiddleware } from './lib/context.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { originCheck } from './middleware/originCheck.js';
 import { sessionMiddleware } from './middleware/session.js';
@@ -32,8 +33,9 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   const app = express();
   app.set('env', appConfig.NODE_ENV);
 
-  // 1. Request ID
+  // 1. Request ID & Context
   app.use(requestId);
+  app.use(contextMiddleware);
 
   // 2. Security Headers (Helmet + strict CSP)
   app.use(securityHeaders());

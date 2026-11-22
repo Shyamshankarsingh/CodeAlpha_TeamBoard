@@ -17,6 +17,7 @@ import { ProjectDetailPage } from './pages/project-detail.js';
 import { BoardPage } from './pages/board.js';
 import { sidebar } from './components/sidebar.js';
 import { renderToast } from './components/toast.js';
+import { socketClient } from './lib/socket.js';
 
 function AppShell(content, showSidebar = true) {
   const { user, workspaces } = store.getState();
@@ -47,6 +48,7 @@ function AppShell(content, showSidebar = true) {
                         try {
                           await api('/api/auth/logout', { method: 'POST' });
                         } catch (e) {}
+                        socketClient.disconnect();
                         store.setUser(null, null);
                         router.navigate('/login');
                       },
@@ -208,6 +210,7 @@ async function init() {
     const data = await api('/api/auth/me');
     if (data && data.user) {
       store.setUser(data.user, data.csrfToken);
+      socketClient.connect();
 
       // Load workspaces
       try {

@@ -3,6 +3,7 @@ import { createApp } from '../../server/app.js';
 import { loadConfig } from '../../server/config.js';
 import { createTestDatabase } from './db.js';
 import { setDb, closeDb } from '../../server/db/index.js';
+import { initSockets, closeSockets } from '../../server/lib/sockets.js';
 
 export async function createTestApp(envOverrides = {}) {
   const config = loadConfig({
@@ -18,6 +19,7 @@ export async function createTestApp(envOverrides = {}) {
 
   const app = createApp(config);
   const server = http.createServer(app);
+  const io = initSockets(server, config);
 
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const address = server.address();
@@ -26,10 +28,12 @@ export async function createTestApp(envOverrides = {}) {
   return {
     app,
     server,
+    io,
     baseUrl,
     config,
     db: testDb.db,
     close: async () => {
+      closeSockets();
       await new Promise((resolve, reject) => {
         server.close((err) => (err ? reject(err) : resolve()));
       });

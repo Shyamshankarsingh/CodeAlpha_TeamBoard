@@ -7,6 +7,7 @@ import { addDays, isExpired, nowIso } from '../../lib/time.js';
 import { AppError } from '../../lib/errors.js';
 import { mailer } from '../../lib/mailer/console.js';
 import { config } from '../../config.js';
+import { events } from '../../lib/events.js';
 
 export const authService = {
   async register({ email, name, password, ip = null, userAgent = null }) {
@@ -168,6 +169,7 @@ export const authService = {
   async logout(sessionId) {
     if (sessionId) {
       authRepo.deleteSession(sessionId);
+      events.emitEvent('session.revoked', { sessionId });
     }
   },
 

@@ -5,6 +5,8 @@ import { router } from '../router.js';
 import { dialog } from '../components/dialog.js';
 import { taskCard } from '../components/task-card.js';
 import { openTaskPanel } from '../components/task-panel.js';
+import { avatar } from '../components/avatar.js';
+import { socketClient } from '../lib/socket.js';
 
 export function BoardPage(params) {
   const wsId = params.workspaceId || store.getState().currentWorkspaceId;
@@ -16,6 +18,7 @@ export function BoardPage(params) {
   let board = null;
   let activeBoardId = boardId;
   let isLoading = true;
+  let presenceUsers = [];
 
   async function loadBoard() {
     isLoading = true;
@@ -378,7 +381,18 @@ export function BoardPage(params) {
         'div',
         { style: 'display: flex; align-items: center; gap: 12px;' },
         h('h1', { className: 'tb-page-title', style: 'margin: 0;' }, board.name),
-        h('span', { className: 'tb-badge' }, `${columns.length} columns`)
+        h('span', { className: 'tb-badge' }, `${columns.length} columns`),
+        presenceUsers.length > 0
+          ? h(
+              'div',
+              {
+                className: 'tb-board-presence',
+                style: 'display: flex; gap: 4px; align-items: center; margin-left: 8px;',
+                title: `${presenceUsers.length} collaborator(s) viewing this board`,
+              },
+              ...presenceUsers.map((u) => avatar({ name: u.name, size: 'sm', avatarUrl: u.avatarUrl }))
+            )
+          : null
       ),
       h(
         'div',
@@ -531,6 +545,21 @@ export function BoardPage(params) {
     container.appendChild(header);
     container.appendChild(boardScroll);
   }
+
+  // Socket.IO real-time subscription
+  socketClient.joinProject(projectId, {
+    onPresence: (users) => {
+      presenceUsers = users || [];
+      render();
+    },
+    onEvent: () => {
+      loadBoard();
+    },
+  });
+
+  container.destroy = () => {
+    socketClient.leaveProject(projectId);
+  };
 
   loadBoard();
   return container;

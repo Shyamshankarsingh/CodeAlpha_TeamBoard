@@ -4,6 +4,7 @@ import { hashToken } from '../lib/tokens.js';
 import { nowIso } from '../lib/time.js';
 import { config } from '../config.js';
 import { AppError } from '../lib/errors.js';
+import { requestContext } from '../lib/context.js';
 
 export const SESSION_COOKIE_NAME = 'tb_session';
 
@@ -80,6 +81,11 @@ export function sessionMiddleware(req, res, next) {
     notificationPrefs,
     emailVerifiedAt: row.email_verified_at,
   };
+
+  const store = requestContext?.getStore?.();
+  if (store) {
+    store.userId = row.user_id;
+  }
 
   next();
 }
