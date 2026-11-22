@@ -15,6 +15,13 @@ import { usersRouter } from './modules/users/routes.js';
 import { workspacesRouter, invitationsRouter } from './modules/workspaces/routes.js';
 import { projectsRouter } from './modules/projects/routes.js';
 import { projectBoardsRouter, boardsRouter, columnsRouter } from './modules/boards/routes.js';
+import {
+  tasksRouter,
+  columnTasksRouter,
+  projectLabelsRouter,
+  labelsRouter,
+  subtasksRouter,
+} from './modules/tasks/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +67,11 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/projects/:pid/boards', projectBoardsRouter);
   app.use('/api/boards', boardsRouter);
   app.use('/api/columns', columnsRouter);
+  app.use('/api/columns/:cid/tasks', columnTasksRouter);
+  app.use('/api/tasks', tasksRouter);
+  app.use('/api/projects/:pid/labels', projectLabelsRouter);
+  app.use('/api/labels', labelsRouter);
+  app.use('/api/subtasks', subtasksRouter);
 
   // 10. 404 & SPA fallback
   app.use(notFound(publicDir));

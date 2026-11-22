@@ -295,3 +295,145 @@
   color: var(--primary);
   border-bottom-color: var(--primary);
 }
+
+/* Task Card */
+.tb-task-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tb-task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-strong);
+}
+
+.tb-task-card.is-dragging {
+  opacity: 0.4;
+}
+
+.tb-board-column.is-dragover {
+  border-color: var(--primary);
+  background-color: rgba(37, 99, 235, 0.04);
+}
+
+.tb-priority-border-urgent {
+  border-left-color: var(--danger) !important;
+}
+
+.tb-priority-border-high {
+  border-left-color: #F97316 !important;
+}
+
+.tb-priority-border-medium {
+  border-left-color: #F59E0B !important;
+}
+
+.tb-priority-border-low {
+  border-left-color: #6366F1 !important;
+}
+
+.tb-task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tb-task-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tb-task-label-chip {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tb-task-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.tb-task-subtasks-summary {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tb-task-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.tb-task-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tb-task-due {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tb-task-due.is-overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.tb-task-assignees-stack {
+  display: flex;
+  gap: -4px;
+}
+
+.tb-task-move-select {
+  padding: 1px 4px;
+  font-size: 0.6875rem;
+  width: auto;
+  height: 22px;
+  color: var(--text-muted);
+}
+
+/* Chips */
+.tb-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.tb-chip:hover {
+  background-color: var(--border);
+}
+
+.tb-chip.is-active {
+  border-color: var(--primary);
+  background-color: var(--primary);
+  color: #FFFFFF;
+}

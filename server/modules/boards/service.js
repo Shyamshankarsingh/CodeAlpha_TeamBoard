@@ -1,5 +1,6 @@
 import { getDb } from '../../db/index.js';
 import { boardsRepo } from './repo.js';
+import { tasksRepo } from '../tasks/repo.js';
 import { projectsRepo } from '../projects/repo.js';
 import { workspacesRepo } from '../workspaces/repo.js';
 import { permissions } from '../../lib/permissions.js';
@@ -95,11 +96,17 @@ export const boardsService = {
     }
 
     const columns = boardsRepo.listColumnsForBoard(boardId);
+    const tasks = tasksRepo.listTasksForBoard(boardId);
     const canManage = permissions.canManageBoards(membership.role, projectMembership?.role);
+
+    const columnsWithTasks = columns.map((col) => ({
+      ...col,
+      tasks: tasks.filter((t) => t.columnId === col.id),
+    }));
 
     return {
       ...board,
-      columns,
+      columns: columnsWithTasks,
       permissions: {
         canManage,
       },

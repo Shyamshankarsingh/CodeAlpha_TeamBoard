@@ -99,4 +99,20 @@ export const permissions = {
   canViewBoard(workspaceRole, projectVisibility, isProjectMember) {
     return this.canViewProject(workspaceRole, projectVisibility, isProjectMember);
   },
+
+  // Task Permissions
+  canCreateTask(workspaceRole) {
+    return ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canEditTask(workspaceRole) {
+    return ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canDeleteTask(workspaceRole, projectRole, reporterId, userId) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    if (projectRole === 'lead') return true;
+    if (reporterId === userId && workspaceRole === 'member') return true;
+    return false;
+  },
 };
