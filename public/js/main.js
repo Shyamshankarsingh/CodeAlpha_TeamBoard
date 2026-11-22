@@ -32,7 +32,7 @@ async function loadUnreadCount() {
     const res = await api('/api/notifications/unread-count');
     unreadCount = res?.unreadCount || 0;
     updateBadge();
-  } catch {}
+  } catch { }
 }
 
 function updateBadge() {
@@ -128,29 +128,29 @@ function AppShell(content, showSidebar = true) {
             themeToggle(),
             user
               ? [
-                  renderNotificationBell(),
-                  h('span', { className: 'tb-user-name' }, user.name),
-                  h('a', { href: '/settings', className: 'tb-btn tb-btn-ghost' }, 'Settings'),
-                  h(
-                    'button',
-                    {
-                      className: 'tb-btn tb-btn-secondary',
-                      onclick: async () => {
-                        try {
-                          await api('/api/auth/logout', { method: 'POST' });
-                        } catch (e) {}
-                        socketClient.disconnect();
-                        store.setUser(null, null);
-                        router.navigate('/login');
-                      },
+                renderNotificationBell(),
+                h('span', { className: 'tb-user-name' }, user.name),
+                h('a', { href: '/settings', className: 'tb-btn tb-btn-ghost' }, 'Settings'),
+                h(
+                  'button',
+                  {
+                    className: 'tb-btn tb-btn-secondary',
+                    onclick: async () => {
+                      try {
+                        await api('/api/auth/logout', { method: 'POST' });
+                      } catch (e) { }
+                      socketClient.disconnect();
+                      store.setUser(null, null);
+                      router.navigate('/login');
                     },
-                    'Sign Out'
-                  ),
-                ]
+                  },
+                  'Sign Out'
+                ),
+              ]
               : [
-                  h('a', { href: '/login', className: 'tb-btn tb-btn-ghost' }, 'Sign In'),
-                  h('a', { href: '/register', className: 'tb-btn tb-btn-primary' }, 'Get Started'),
-                ]
+                h('a', { href: '/login', className: 'tb-btn tb-btn-ghost' }, 'Sign In'),
+                h('a', { href: '/register', className: 'tb-btn tb-btn-primary' }, 'Get Started'),
+              ]
           )
         )
       ),
@@ -201,7 +201,7 @@ function AppShell(content, showSidebar = true) {
               onclick: async () => {
                 try {
                   await api('/api/auth/logout', { method: 'POST' });
-                } catch (e) {}
+                } catch (e) { }
                 store.setUser(null, null);
                 router.navigate('/login');
               },
@@ -351,7 +351,7 @@ async function init() {
         if (wsList && wsList.length > 0 && !store.getState().currentWorkspaceId) {
           store.setCurrentWorkspace(wsList[0].id);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   } catch (e) {
     store.setUser(null, null);

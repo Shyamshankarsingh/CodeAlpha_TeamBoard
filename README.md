@@ -1,64 +1,110 @@
-# TeamBoard (working name)
+# TeamBoard
 
-A collaborative project management platform: workspaces, projects, Kanban boards, tasks, comments with mentions, notifications and real-time updates. Inspired by tools such as Trello, Asana, Linear and ClickUp, without copying any of them.
+A collaborative, real-time project management web platform: workspaces, projects, Kanban boards with fractional positioning, multi-dimensional task list views, threaded discussions with `@mentions`, and instant notifications.
 
-**Status:** Planning only. This repository currently contains documentation. There is no application code, nothing has been installed, and no tests exist or have been run. The setup section below describes the planned workflow and does not work yet.
+Inspired by Linear, Trello, and ClickUp, built entirely with vanilla JavaScript (Node ES modules, zero frontend frameworks, zero bundlers), Express 5, SQLite via `better-sqlite3` in WAL mode, and Socket.IO.
 
-## Planned Features (MVP)
+---
 
-- **Accounts:** Register, log in, password reset, email verification (switchable), sessions review and revocation.
-- **Workspaces:** Owner, Admin, Member, and Viewer roles, plus invitations.
-- **Projects:** Visibility settings, dates, priority, members, progress, and activity feed.
-- **Kanban Boards:** Custom columns with drag-and-drop (and accessible keyboard alternative).
-- **Tasks:** Multiple assignees, labels, subtasks, due dates, and priorities.
-- **Comments:** Threaded discussions with `@mentions`.
-- **Real-Time Collaboration:** Real-time updates and presence powered by Socket.IO.
-- **Notifications:** Persistent notification inbox, reminders, and overdue alerts.
-- **Views & Dashboard:** Kanban board, list view, and workspace dashboard.
-- **UX & Design:** Light/dark mode, fully responsive across 375px to 1440px.
-- **Post-MVP Extras:** Attachments, global FTS5 search, dependencies, bulk actions, CSV/JSON export, calendar view (see [docs/PRD.md](file:///e:/projectanagement/docs/PRD.md)).
+## Features
 
-## Stack
+- **Workspaces & Multi-Tenancy:** Role-based access control (Owner, Admin, Member, Viewer), workspace invitations, and member management.
+- **Projects & Permissions:** Public workspace-wide projects and restricted private projects.
+- **Real-Time Kanban Boards:** Live drag-and-drop workflow powered by Socket.IO, fractional position math (Base-62), custom column categories, and live presence avatars.
+- **List View & Multi-Criteria Filtering:** Responsive sortable table view, filterable by text search, status, priority, due date range, assignee, and labels with two-way URL parameter persistence.
+- **Task Management:** Priorities (Urgent, High, Medium, Low, None), due dates, project-scoped colored labels, multi-assignees, subtasks with completion checklists, and watchers.
+- **Threaded Discussions:** In-task comments with 1-level reply nesting, `@mentions`, auto-watching, and edit/delete capabilities.
+- **Notification Inbox:** Real-time push notifications, unread badge counter, and automated reminder/overdue deduplication.
+- **Workspace Analytics:** Centralized overview with task completion metrics, upcoming 14-day deadlines, and audit activity streams.
+- **Zero-Trust Security:** Centralized server-side authorization (`lib/permissions.js`), Argon2id password hashing, CSRF synchronizer tokens, strict Origin checks, strict Content Security Policy, and 100% pure DOM text rendering (zero `innerHTML` sinks across the entire client).
+- **Responsive UX & Design System:** WCAG 2.1 AA compliance, Light/Dark mode switcher, mobile drawer navigation (375px–390px scroll-snap), and global keyboard shortcuts (`/`, `c`, `?`, `Esc`, `g b`, `g l`, `g i`).
 
-- **Frontend:** HTML, CSS, vanilla JavaScript (ES modules). No front-end framework.
-- **Backend:** Node.js, Express, REST API, Socket.IO.
-- **Database:** SQLite via `better-sqlite3` in WAL mode.
-- **Security:** Server-side sessions, Argon2id password hashing, CSRF tokens, strict CSP.
+---
 
-## Architecture in Brief
+## Tech Stack
 
-One Node process serves the static front end, REST API, and Socket.IO server on the same origin, backed by a single SQLite database file. All writes proceed through REST; sockets only push events after transactions commit. Routes call services, services handle business logic/authorization and invoke repositories, and repositories manage SQL.
+| Layer | Technology | Details |
+| :--- | :--- | :--- |
+| **Frontend** | Vanilla JavaScript (ES modules) | Pure DOM `h()` builder with `textContent`, CSS design tokens (`tokens.css`), zero frameworks, zero bundlers |
+| **Backend** | Node.js (v20+ / v22+ LTS), Express 5 | Modular layered architecture: Routes -> Services -> Repositories |
+| **Database** | SQLite via `better-sqlite3` | WAL mode, foreign keys enforced, transaction helper, automated migrations |
+| **Real-Time** | Socket.IO | Room-based event broadcasting, presence tracking, and client deduplication |
+| **Auth & Security** | Argon2id, SHA-256 session tokens | Helmet, strict CSP, Origin validation, CSRF tokens, rate limiting |
 
-## Documentation
+---
 
-| Document | Contents |
-| :--- | :--- |
-| [docs/PRD.md](file:///e:/projectanagement/docs/PRD.md) | Product scope, journeys, requirements |
-| [docs/RESEARCH.md](file:///e:/projectanagement/docs/RESEARCH.md) | Technical and product research |
-| [docs/ARCHITECTURE.md](file:///e:/projectanagement/docs/ARCHITECTURE.md) | Structure, layers, frontend, dependencies, scaling |
-| [docs/DATABASE.md](file:///e:/projectanagement/docs/DATABASE.md) | Schema, constraints, ER diagram |
-| [docs/API.md](file:///e:/projectanagement/docs/API.md) | REST endpoints and envelopes |
-| [docs/WEBSOCKET.md](file:///e:/projectanagement/docs/WEBSOCKET.md) | Socket rooms, events, payloads |
-| [docs/DESIGN.md](file:///e:/projectanagement/docs/DESIGN.md) | Design system, tokens, responsive plan |
-| [docs/SECURITY.md](file:///e:/projectanagement/docs/SECURITY.md) | Threat model, controls, permission matrix |
-| [docs/TESTING.md](file:///e:/projectanagement/docs/TESTING.md) | Test strategy and catalogue |
-| [docs/IMPLEMENTATION_PLAN.md](file:///e:/projectanagement/docs/IMPLEMENTATION_PLAN.md) | Phase-by-phase roadmap |
-| [DECISIONS.md](file:///e:/projectanagement/DECISIONS.md) | Decision records and open questions |
-| [AGENTS.md](file:///e:/projectanagement/AGENTS.md) | Conventions for coding agents |
-| [MEMORY.md](file:///e:/projectanagement/MEMORY.md) | Context and progress tracker |
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
-- Node.js (v22+ LTS line; detected v26.11.1 on host)
-- npm (detected v11.20.0)
-- Build toolchain for native modules (`better-sqlite3`, `argon2` / scrypt fallback)
-- Modern web browser
+- Node.js >= 20.x or 22.x LTS
+- npm >= 10.x
 
-## Setup (Planned)
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/example/teamboard.git
+cd teamboard
+
+# Install dependencies
 npm install
-cp .env.example .env
+
+# Start in development mode (with node --watch)
 npm run dev
+
+# Run all automated tests (node --test)
 npm test
+
+# Run automated database backup
+npm run backup
+
+# Start in production mode
+npm start
 ```
+
+Open `http://localhost:3000` in your browser.
+
+---
+
+## Project Structure
+
+```
+├── public/                 # Static frontend files (Vanilla ES modules)
+│   ├── assets/css/         # Tokens, base, layout, components, pages
+│   ├── js/
+│   │   ├── components/     # Reusable UI components (avatar, dialog, table, filter-bar, etc.)
+│   │   ├── lib/            # DOM builder, WebSocket client, keyboard shortcuts
+│   │   ├── pages/          # Page views (landing, board, dashboard, login, etc.)
+│   │   ├── main.js         # Client bootstrap and routing
+│   │   └── store.js        # Centralized client reactive store
+│   └── index.html          # SPA HTML shell
+├── server/                 # Express backend application
+│   ├── db/                 # SQLite connection, WAL pragmas, migrations
+│   ├── lib/                # Math engine, event bus, permissions, logger, errors
+│   ├── middleware/         # Security headers, CSRF, Origin check, rate limit, sessions
+│   ├── modules/            # Domain modules (auth, workspaces, projects, boards, tasks, comments, notifications, dashboard)
+│   └── app.js              # Express app definition and routing
+├── scripts/                # Utility scripts (backup.js)
+├── tests/                  # Automated test suite (node --test)
+│   ├── db/                 # Schema and transaction rollback tests
+│   ├── integration/        # End-to-end HTTP and WebSocket integration tests
+│   └── unit/               # Math, permissions, and security unit tests
+└── docs/                   # System documentation and architecture records
+```
+
+---
+
+## Production Deployment
+
+Refer to [docs/DEPLOYMENT.md](file:///e:/projectanagement/docs/DEPLOYMENT.md) for complete instructions:
+- Docker containerization (`docker build -t teamboard .`)
+- Nginx reverse proxy configuration with TLS/SSL and WebSockets
+- Systemd service configuration
+- Automated daily backups and disaster recovery runbook
+
+---
+
+## License
+
+UNLICENSED. Portfolio and demonstration project.

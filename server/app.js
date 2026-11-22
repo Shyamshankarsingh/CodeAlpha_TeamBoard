@@ -27,6 +27,7 @@ import {
 import { taskCommentsRouter, commentsRouter } from './modules/comments/routes.js';
 import { notificationsRouter } from './modules/notifications/routes.js';
 import { workspaceDashboardRouter } from './modules/dashboard/routes.js';
+import { getDb } from './db/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +65,30 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   // 9. API Routes
   app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/api/health/ready', (req, res) => {
+    try {
+      const db = getDb();
+      const dbCheck = db.prepare('SELECT 1 as alive').get();
+      const walCheck = db.prepare('PRAGMA journal_mode').get();
+
+      if (!dbCheck || dbCheck.alive !== 1) {
+        return res.status(503).json({ status: 'error', database: 'unhealthy' });
+      }
+
+      res.status(200).json({
+        status: 'ok',
+        checks: {
+          database: 'up',
+          journalMode: walCheck ? walCheck.journal_mode : 'unknown',
+        },
+        uptime: Math.round(process.uptime()),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      res.status(503).json({ status: 'error', error: err.message });
+    }
   });
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
