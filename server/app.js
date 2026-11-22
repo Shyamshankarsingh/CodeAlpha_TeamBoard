@@ -22,6 +22,7 @@ import {
   projectLabelsRouter,
   labelsRouter,
   subtasksRouter,
+  projectTasksRouter,
 } from './modules/tasks/routes.js';
 import { taskCommentsRouter, commentsRouter } from './modules/comments/routes.js';
 import { notificationsRouter } from './modules/notifications/routes.js';
@@ -71,6 +72,7 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/invitations', invitationsRouter);
   app.use('/api/projects', projectsRouter);
   app.use('/api/projects/:pid/boards', projectBoardsRouter);
+  app.use('/api/projects/:pid/tasks', projectTasksRouter);
   app.use('/api/boards', boardsRouter);
   app.use('/api/columns', columnsRouter);
   app.use('/api/columns/:cid/tasks', columnTasksRouter);

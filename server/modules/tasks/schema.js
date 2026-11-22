@@ -72,3 +72,18 @@ export const moveSubtaskSchema = z.object({
   prevPosition: z.string().nullable().optional(),
   nextPosition: z.string().nullable().optional(),
 });
+
+export const listProjectTasksQuerySchema = z.object({
+  search: z.string().max(100).optional(),
+  columnId: z.string().uuid('Invalid column ID').optional(),
+  category: z.enum(['backlog', 'todo', 'in_progress', 'review', 'done']).optional(),
+  priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
+  assigneeId: z.string().uuid('Invalid assignee ID').optional(),
+  labelId: z.string().uuid('Invalid label ID').optional(),
+  dueDate: z.enum(['overdue', 'today', 'this_week', 'none']).optional(),
+  includeArchived: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional().default(false),
+  sortBy: z.enum(['position', 'title', 'priority', 'due_date', 'created_at']).optional().default('position'),
+  sortDir: z.enum(['asc', 'desc']).optional().default('asc'),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(25),
+  offset: z.coerce.number().int().min(0).optional().default(0),
+});

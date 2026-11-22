@@ -11,15 +11,27 @@ import {
   createSubtaskSchema,
   updateSubtaskSchema,
   moveSubtaskSchema,
+  listProjectTasksQuerySchema,
 } from './schema.js';
 import { validate } from '../../middleware/validate.js';
 import { requireAuth } from '../../middleware/session.js';
 
+export const projectTasksRouter = Router({ mergeParams: true });
 export const columnTasksRouter = Router({ mergeParams: true });
 export const tasksRouter = Router();
 export const projectLabelsRouter = Router({ mergeParams: true });
 export const labelsRouter = Router();
 export const subtasksRouter = Router();
+
+// Project-scoped tasks (/api/projects/:pid/tasks)
+projectTasksRouter.get('/', requireAuth, validate(listProjectTasksQuerySchema, 'query'), (req, res, next) => {
+  try {
+    const result = tasksService.listProjectTasks(req.user.id, req.params.pid, req.query);
+    res.status(200).json({ data: result });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Column-scoped tasks (/api/columns/:cid/tasks)
 columnTasksRouter.post('/', requireAuth, validate(createTaskSchema), (req, res, next) => {

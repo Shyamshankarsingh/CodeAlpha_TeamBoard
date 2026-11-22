@@ -104,6 +104,25 @@ export const tasksService = {
     return task;
   },
 
+  listProjectTasks(userId, projectId, query) {
+    const project = projectsRepo.findProjectById(projectId);
+    if (!project) {
+      throw new AppError('NOT_FOUND', 404, 'Project not found');
+    }
+
+    const membership = workspacesRepo.findMembership(project.workspace_id, userId);
+    if (!membership) {
+      throw new AppError('NOT_FOUND', 404, 'Project not found');
+    }
+
+    const projectMember = projectsRepo.findProjectMember(projectId, userId);
+    if (!permissions.canViewProject(membership.role, project.visibility, Boolean(projectMember))) {
+      throw new AppError('NOT_FOUND', 404, 'Project not found');
+    }
+
+    return tasksRepo.listFilteredProjectTasks(projectId, query);
+  },
+
   updateTask(userId, taskId, updates) {
     const task = tasksRepo.findTaskById(taskId);
     if (!task) {

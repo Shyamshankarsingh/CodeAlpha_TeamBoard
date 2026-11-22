@@ -146,6 +146,144 @@ export const tasksRepo = {
     return rows.map((r) => this.hydrateTask(r));
   },
 
+  listFilteredProjectTasks(projectId, {
+    search,
+    columnId,
+    category,
+    priority,
+    assigneeId,
+    labelId,
+    dueDate,
+    includeArchived = false,
+    sortBy = 'position',
+    sortDir = 'asc',
+    limit = 25,
+    offset = 0,
+  } = {}) {
+    const db = getDb();
+    const conditions = ['t.project_id = ?'];
+    const params = [projectId];
+
+    if (!includeArchived) {
+      conditions.push('t.archived_at IS NULL');
+    }
+
+    if (columnId) {
+      conditions.push('t.column_id = ?');
+      params.push(columnId);
+    }
+
+    if (category) {
+      conditions.push('c.category = ?');
+      params.push(category);
+    }
+
+    if (priority) {
+      conditions.push('t.priority = ?');
+      params.push(priority);
+    }
+
+    if (assigneeId) {
+      conditions.push('EXISTS (SELECT 1 FROM task_assignees ta WHERE ta.task_id = t.id AND ta.user_id = ?)');
+      params.push(assigneeId);
+    }
+
+    if (labelId) {
+      conditions.push('EXISTS (SELECT 1 FROM task_labels tl WHERE tl.task_id = t.id AND tl.label_id = ?)');
+      params.push(labelId);
+    }
+
+    if (dueDate === 'overdue') {
+      conditions.push("t.due_date IS NOT NULL AND date(t.due_date) < date('now') AND t.completed_at IS NULL");
+    } else if (dueDate === 'today') {
+      conditions.push("t.due_date IS NOT NULL AND date(t.due_date) = date('now')");
+    } else if (dueDate === 'this_week') {
+      conditions.push("t.due_date IS NOT NULL AND date(t.due_date) >= date('now') AND date(t.due_date) <= date('now', '+7 days')");
+    } else if (dueDate === 'none') {
+      conditions.push('t.due_date IS NULL');
+    }
+
+    if (search && search.trim()) {
+      conditions.push('(t.title LIKE ? OR t.description LIKE ?)');
+      const term = `%${search.trim()}%`;
+      params.push(term, term);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Total count
+    const countRow = db.prepare(`
+      SELECT COUNT(*) AS total
+      FROM tasks t
+      JOIN board_columns c ON t.column_id = c.id
+      WHERE ${whereClause}
+    `).get(...params);
+    const total = countRow ? countRow.total : 0;
+
+    // Sorting allowlist
+    let orderClause = 't.position ASC';
+    const dir = sortDir === 'desc' ? 'DESC' : 'ASC';
+
+    if (sortBy === 'title') {
+      orderClause = `t.title COLLATE NOCASE ${dir}`;
+    } else if (sortBy === 'priority') {
+      if (dir === 'ASC') {
+        orderClause = `
+          CASE t.priority
+            WHEN 'urgent' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'medium' THEN 3
+            WHEN 'low' THEN 4
+            ELSE 5
+          END ASC, t.position ASC
+        `;
+      } else {
+        orderClause = `
+          CASE t.priority
+            WHEN 'urgent' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'medium' THEN 3
+            WHEN 'low' THEN 4
+            ELSE 5
+          END DESC, t.position ASC
+        `;
+      }
+    } else if (sortBy === 'due_date') {
+      orderClause = `CASE WHEN t.due_date IS NULL THEN 1 ELSE 0 END, t.due_date ${dir}, t.position ASC`;
+    } else if (sortBy === 'created_at') {
+      orderClause = `t.created_at ${dir}`;
+    } else {
+      orderClause = `t.position ${dir}`;
+    }
+
+    const queryParams = [...params, limit, offset];
+    const rows = db.prepare(`
+      SELECT t.*,
+             c.name as column_name, c.category as column_category,
+             p.workspace_id, p.visibility as project_visibility, p.name as project_name,
+             u.name as reporter_name, u.email as reporter_email, u.avatar_path as reporter_avatar_url
+      FROM tasks t
+      JOIN board_columns c ON t.column_id = c.id
+      JOIN projects p ON t.project_id = p.id
+      JOIN users u ON t.reporter_id = u.id
+      WHERE ${whereClause}
+      ORDER BY ${orderClause}
+      LIMIT ? OFFSET ?
+    `).all(...queryParams);
+
+    const tasks = rows.map((r) => this.hydrateTask(r));
+
+    return {
+      tasks,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + tasks.length < total,
+      },
+    };
+  },
+
   updateTask(id, updates, expectedVersion, now = new Date().toISOString()) {
     const db = getDb();
     const fields = [];

@@ -7,6 +7,8 @@ import { taskCard } from '../components/task-card.js';
 import { openTaskPanel } from '../components/task-panel.js';
 import { avatar } from '../components/avatar.js';
 import { socketClient } from '../lib/socket.js';
+import { taskFilterBar } from '../components/task-filter-bar.js';
+import { taskTable } from '../components/task-table.js';
 
 export function BoardPage(params) {
   const wsId = params.workspaceId || store.getState().currentWorkspaceId;
@@ -15,10 +17,109 @@ export function BoardPage(params) {
 
   const container = h('div', { className: 'tb-board-page' });
 
+  // URL state persistence
+  const searchParams = new URLSearchParams(window.location.search);
+  let viewMode = searchParams.get('view') === 'list' ? 'list' : 'board';
+  let filters = {
+    search: searchParams.get('search') || '',
+    columnId: searchParams.get('columnId') || undefined,
+    priority: searchParams.get('priority') || undefined,
+    dueDate: searchParams.get('dueDate') || undefined,
+    assigneeId: searchParams.get('assigneeId') || undefined,
+    labelId: searchParams.get('labelId') || undefined,
+  };
+  let sortBy = searchParams.get('sortBy') || 'position';
+  let sortDir = searchParams.get('sortDir') || 'asc';
+  let offset = parseInt(searchParams.get('offset') || '0', 10);
+  const limit = 25;
+
   let board = null;
   let activeBoardId = boardId;
+  let projectMembers = [];
+  let projectLabels = [];
+  let listTasks = [];
+  let listTotal = 0;
   let isLoading = true;
   let presenceUsers = [];
+
+  function syncUrl() {
+    const params = new URLSearchParams();
+    if (viewMode !== 'board') params.set('view', viewMode);
+    if (filters.search) params.set('search', filters.search);
+    if (filters.columnId) params.set('columnId', filters.columnId);
+    if (filters.priority) params.set('priority', filters.priority);
+    if (filters.dueDate) params.set('dueDate', filters.dueDate);
+    if (filters.assigneeId) params.set('assigneeId', filters.assigneeId);
+    if (filters.labelId) params.set('labelId', filters.labelId);
+    if (sortBy !== 'position') params.set('sortBy', sortBy);
+    if (sortDir !== 'asc') params.set('sortDir', sortDir);
+    if (offset > 0) params.set('offset', String(offset));
+
+    const qs = params.toString();
+    const newPath = window.location.pathname + (qs ? `?${qs}` : '');
+    window.history.replaceState(null, '', newPath);
+  }
+
+  function matchesFilters(task) {
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      const titleMatch = (task.title || '').toLowerCase().includes(s);
+      const descMatch = (task.description || '').toLowerCase().includes(s);
+      if (!titleMatch && !descMatch) return false;
+    }
+    if (filters.columnId && task.columnId !== filters.columnId) {
+      return false;
+    }
+    if (filters.priority && task.priority !== filters.priority) {
+      return false;
+    }
+    if (filters.assigneeId) {
+      const hasAssignee = (task.assignees || []).some(
+        (a) => a.id === filters.assigneeId || a.userId === filters.assigneeId
+      );
+      if (!hasAssignee) return false;
+    }
+    if (filters.labelId) {
+      const hasLabel = (task.labels || []).some((l) => l.id === filters.labelId);
+      if (!hasLabel) return false;
+    }
+    if (filters.dueDate) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (filters.dueDate === 'overdue') {
+        if (!task.dueDate || task.dueDate >= today || task.completedAt) return false;
+      } else if (filters.dueDate === 'today') {
+        if (!task.dueDate || task.dueDate !== today) return false;
+      } else if (filters.dueDate === 'this_week') {
+        const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+        if (!task.dueDate || task.dueDate < today || task.dueDate > nextWeek) return false;
+      } else if (filters.dueDate === 'none') {
+        if (task.dueDate) return false;
+      }
+    }
+    return true;
+  }
+
+  async function fetchListTasks() {
+    try {
+      const q = new URLSearchParams();
+      if (filters.search) q.set('search', filters.search);
+      if (filters.columnId) q.set('columnId', filters.columnId);
+      if (filters.priority) q.set('priority', filters.priority);
+      if (filters.dueDate) q.set('dueDate', filters.dueDate);
+      if (filters.assigneeId) q.set('assigneeId', filters.assigneeId);
+      if (filters.labelId) q.set('labelId', filters.labelId);
+      q.set('sortBy', sortBy);
+      q.set('sortDir', sortDir);
+      q.set('limit', String(limit));
+      q.set('offset', String(offset));
+
+      const res = await api(`/api/projects/${projectId}/tasks?${q.toString()}`);
+      listTasks = res.tasks || [];
+      listTotal = res.pagination ? res.pagination.total : listTasks.length;
+    } catch (err) {
+      store.setToast(err.message || 'Failed to load list tasks', 'error');
+    }
+  }
 
   async function loadBoard() {
     isLoading = true;
@@ -36,12 +137,38 @@ export function BoardPage(params) {
         }
       }
 
-      board = await api(`/api/boards/${activeBoardId}`);
+      const [boardData, membersData, labelsData] = await Promise.all([
+        api(`/api/boards/${activeBoardId}`),
+        api(`/api/projects/${projectId}/members`).catch(() => []),
+        api(`/api/projects/${projectId}/labels`).catch(() => []),
+      ]);
+
+      board = boardData;
+      projectMembers = membersData || [];
+      projectLabels = labelsData || [];
+
+      if (viewMode === 'list') {
+        await fetchListTasks();
+      }
     } catch (err) {
       store.setToast(err.message || 'Failed to load board', 'error');
     } finally {
       isLoading = false;
       render();
+    }
+  }
+
+  async function refreshData() {
+    try {
+      if (activeBoardId) {
+        board = await api(`/api/boards/${activeBoardId}`);
+      }
+      if (viewMode === 'list') {
+        await fetchListTasks();
+      }
+      render();
+    } catch {
+      // silent refresh error
     }
   }
 
@@ -226,7 +353,7 @@ export function BoardPage(params) {
             });
             modal.close();
             store.setToast('Task created', 'success');
-            loadBoard();
+            refreshData();
           } catch (err) {
             errorEl.textContent = err.message || 'Failed to create task';
           }
@@ -286,7 +413,7 @@ export function BoardPage(params) {
           expectedVersion: task.version,
         },
       });
-      loadBoard();
+      refreshData();
     } catch (err) {
       store.setToast(err.message || 'Failed to move task', 'error');
     }
@@ -302,11 +429,9 @@ export function BoardPage(params) {
     let nextPos = null;
 
     if (direction < 0) {
-      // Moving left: insert before targetIndex
       prevPos = targetIndex > 0 ? columns[targetIndex - 1].position : null;
       nextPos = columns[targetIndex].position;
     } else {
-      // Moving right: insert after targetIndex
       prevPos = columns[targetIndex].position;
       nextPos = targetIndex < columns.length - 1 ? columns[targetIndex + 1].position : null;
     }
@@ -340,11 +465,52 @@ export function BoardPage(params) {
     }
   }
 
+  async function handleFilterChange(newFilters) {
+    filters = newFilters;
+    offset = 0;
+    syncUrl();
+    if (viewMode === 'list') {
+      await fetchListTasks();
+    }
+    render();
+  }
+
+  async function handleSort(field) {
+    if (sortBy === field) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortBy = field;
+      sortDir = 'asc';
+    }
+    offset = 0;
+    syncUrl();
+    await fetchListTasks();
+    render();
+  }
+
+  async function handlePageChange(newOffset) {
+    offset = newOffset;
+    syncUrl();
+    await fetchListTasks();
+    render();
+  }
+
+  async function setView(mode) {
+    if (viewMode === mode) return;
+    viewMode = mode;
+    offset = 0;
+    syncUrl();
+    if (viewMode === 'list') {
+      await fetchListTasks();
+    }
+    render();
+  }
+
   function render() {
     clearChildren(container);
 
     if (isLoading && !board) {
-      container.appendChild(h('div', { className: 'tb-loading' }, 'Loading Kanban board...'));
+      container.appendChild(h('div', { className: 'tb-loading' }, 'Loading board...'));
       return;
     }
 
@@ -374,9 +540,35 @@ export function BoardPage(params) {
       h('span', { style: 'color: var(--color-text-main); font-weight: 500;' }, board.name)
     );
 
+    // View Switcher (Board ⇄ List)
+    const viewSwitcher = h(
+      'div',
+      { className: 'tb-view-switcher', role: 'group', 'aria-label': 'Select view mode' },
+      h(
+        'button',
+        {
+          type: 'button',
+          className: `tb-view-btn ${viewMode === 'board' ? 'is-active' : ''}`,
+          'aria-pressed': viewMode === 'board',
+          onclick: () => setView('board'),
+        },
+        '☷ Board'
+      ),
+      h(
+        'button',
+        {
+          type: 'button',
+          className: `tb-view-btn ${viewMode === 'list' ? 'is-active' : ''}`,
+          'aria-pressed': viewMode === 'list',
+          onclick: () => setView('list'),
+        },
+        '☰ List'
+      )
+    );
+
     const header = h(
       'div',
-      { className: 'tb-board-header', style: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);' },
+      { className: 'tb-board-header', style: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: 12px;' },
       h(
         'div',
         { style: 'display: flex; align-items: center; gap: 12px;' },
@@ -396,7 +588,8 @@ export function BoardPage(params) {
       ),
       h(
         'div',
-        { style: 'display: flex; gap: 8px;' },
+        { style: 'display: flex; align-items: center; gap: 12px;' },
+        viewSwitcher,
         perms.canManage
           ? h(
               'button',
@@ -407,143 +600,184 @@ export function BoardPage(params) {
       )
     );
 
-    const boardScroll = h(
-      'div',
-      { className: 'tb-board-columns-container' },
-      ...columns.map((col, idx) => {
-        const tasks = col.tasks || [];
-        let columnEl;
-
-        columnEl = h(
-          'div',
-          {
-            className: 'tb-board-column',
-            ondragover: (e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-              columnEl.classList.add('is-dragover');
-            },
-            ondragleave: () => {
-              columnEl.classList.remove('is-dragover');
-            },
-            ondrop: async (e) => {
-              e.preventDefault();
-              columnEl.classList.remove('is-dragover');
-              try {
-                const dataStr = e.dataTransfer.getData('text/plain');
-                const data = JSON.parse(dataStr);
-                if (data && data.taskId && data.columnId !== col.id) {
-                  const currentTask = await api(`/api/tasks/${data.taskId}`);
-                  await api(`/api/tasks/${data.taskId}/move`, {
-                    method: 'POST',
-                    body: {
-                      columnId: col.id,
-                      expectedVersion: currentTask.version,
-                    },
-                  });
-                  loadBoard();
-                }
-              } catch (err) {
-                store.setToast(err.message || 'Failed to move task', 'error');
-              }
-            },
-          },
-          h(
-            'div',
-            { className: 'tb-column-header' },
-            h(
-              'div',
-              { style: 'display: flex; align-items: center; gap: 8px;' },
-              h('h3', { className: 'tb-column-title' }, col.name),
-              h('span', { className: `tb-badge tb-badge-category-${col.category}` }, `${tasks.length}`)
-            ),
-            perms.canManage
-              ? h(
-                  'div',
-                  { className: 'tb-column-actions', style: 'display: flex; gap: 4px;' },
-                  h(
-                    'button',
-                    {
-                      className: 'tb-btn-icon',
-                      title: 'Move Left',
-                      disabled: idx === 0,
-                      onclick: () => moveColumn(idx, -1),
-                    },
-                    '←'
-                  ),
-                  h(
-                    'button',
-                    {
-                      className: 'tb-btn-icon',
-                      title: 'Move Right',
-                      disabled: idx === columns.length - 1,
-                      onclick: () => moveColumn(idx, 1),
-                    },
-                    '→'
-                  ),
-                  h(
-                    'button',
-                    {
-                      className: 'tb-btn-icon',
-                      title: 'Edit Column',
-                      onclick: () => openRenameColumnDialog(col),
-                    },
-                    '✎'
-                  ),
-                  h(
-                    'button',
-                    {
-                      className: 'tb-btn-icon tb-btn-icon-danger',
-                      title: 'Delete Column',
-                      onclick: () => deleteColumn(col),
-                    },
-                    '×'
-                  )
-                )
-              : null
-          ),
-          h(
-            'div',
-            { className: 'tb-column-cards' },
-            tasks.length === 0
-              ? h('div', { className: 'tb-column-empty' }, 'No tasks in column.')
-              : tasks.map((t) =>
-                  taskCard({
-                    task: t,
-                    columns,
-                    onOpen: (taskToOpen) =>
-                      openTaskPanel({
-                        taskId: taskToOpen.id,
-                        columns,
-                        onUpdated: loadBoard,
-                      }),
-                    onMoveToColumn: (taskToMove, targetColId) =>
-                      moveTaskToColumn(taskToMove, targetColId),
-                  })
-                )
-          ),
-          h(
-            'div',
-            { className: 'tb-column-footer', style: 'padding: 8px; border-top: 1px solid var(--border);' },
-            h(
-              'button',
-              {
-                className: 'tb-btn tb-btn-ghost tb-btn-sm',
-                style: 'width: 100%; justify-content: flex-start;',
-                onclick: () => openQuickAddTaskDialog(col),
-              },
-              '+ Add Task'
-            )
-          )
-        );
-
-        return columnEl;
-      })
-    );
+    // Filter Bar
+    const filterBar = taskFilterBar({
+      filters,
+      columns,
+      members: projectMembers,
+      labels: projectLabels,
+      onFilterChange: handleFilterChange,
+    });
 
     container.appendChild(breadcrumbs);
     container.appendChild(header);
-    container.appendChild(boardScroll);
+    container.appendChild(filterBar);
+
+    if (viewMode === 'list') {
+      // List View: task table
+      const tableEl = taskTable({
+        tasks: listTasks,
+        total: listTotal,
+        limit,
+        offset,
+        sortBy,
+        sortDir,
+        onSort: handleSort,
+        onPageChange: handlePageChange,
+        onTaskClick: (task) =>
+          openTaskPanel({
+            taskId: task.id,
+            columns,
+            onUpdated: refreshData,
+          }),
+      });
+      container.appendChild(tableEl);
+    } else {
+      // Board View: Kanban columns with filtered task cards
+      const boardScroll = h(
+        'div',
+        { className: 'tb-board-columns-container' },
+        ...columns.map((col, idx) => {
+          const allTasks = col.tasks || [];
+          const visibleTasks = allTasks.filter(matchesFilters);
+          let columnEl;
+
+          columnEl = h(
+            'div',
+            {
+              className: 'tb-board-column',
+              ondragover: (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                columnEl.classList.add('is-dragover');
+              },
+              ondragleave: () => {
+                columnEl.classList.remove('is-dragover');
+              },
+              ondrop: async (e) => {
+                e.preventDefault();
+                columnEl.classList.remove('is-dragover');
+                try {
+                  const dataStr = e.dataTransfer.getData('text/plain');
+                  const data = JSON.parse(dataStr);
+                  if (data && data.taskId && data.columnId !== col.id) {
+                    const currentTask = await api(`/api/tasks/${data.taskId}`);
+                    await api(`/api/tasks/${data.taskId}/move`, {
+                      method: 'POST',
+                      body: {
+                        columnId: col.id,
+                        expectedVersion: currentTask.version,
+                      },
+                    });
+                    refreshData();
+                  }
+                } catch (err) {
+                  store.setToast(err.message || 'Failed to move task', 'error');
+                }
+              },
+            },
+            h(
+              'div',
+              { className: 'tb-column-header' },
+              h(
+                'div',
+                { style: 'display: flex; align-items: center; gap: 8px;' },
+                h('h3', { className: 'tb-column-title' }, col.name),
+                h(
+                  'span',
+                  { className: `tb-badge tb-badge-category-${col.category}` },
+                  `${visibleTasks.length}${visibleTasks.length !== allTasks.length ? `/${allTasks.length}` : ''}`
+                )
+              ),
+              perms.canManage
+                ? h(
+                    'div',
+                    { className: 'tb-column-actions', style: 'display: flex; gap: 4px;' },
+                    h(
+                      'button',
+                      {
+                        className: 'tb-btn-icon',
+                        title: 'Move Left',
+                        disabled: idx === 0,
+                        onclick: () => moveColumn(idx, -1),
+                      },
+                      '←'
+                    ),
+                    h(
+                      'button',
+                      {
+                        className: 'tb-btn-icon',
+                        title: 'Move Right',
+                        disabled: idx === columns.length - 1,
+                        onclick: () => moveColumn(idx, 1),
+                      },
+                      '→'
+                    ),
+                    h(
+                      'button',
+                      {
+                        className: 'tb-btn-icon',
+                        title: 'Edit Column',
+                        onclick: () => openRenameColumnDialog(col),
+                      },
+                      '✎'
+                    ),
+                    h(
+                      'button',
+                      {
+                        className: 'tb-btn-icon tb-btn-icon-danger',
+                        title: 'Delete Column',
+                        onclick: () => deleteColumn(col),
+                      },
+                      '×'
+                    )
+                  )
+                : null
+            ),
+            h(
+              'div',
+              { className: 'tb-column-cards' },
+              visibleTasks.length === 0
+                ? h(
+                    'div',
+                    { className: 'tb-column-empty' },
+                    allTasks.length === 0 ? 'No tasks in column.' : 'No matching tasks.'
+                  )
+                : visibleTasks.map((t) =>
+                    taskCard({
+                      task: t,
+                      columns,
+                      onOpen: (taskToOpen) =>
+                        openTaskPanel({
+                          taskId: taskToOpen.id,
+                          columns,
+                          onUpdated: refreshData,
+                        }),
+                      onMoveToColumn: (taskToMove, targetColId) =>
+                        moveTaskToColumn(taskToMove, targetColId),
+                    })
+                  )
+            ),
+            h(
+              'div',
+              { className: 'tb-column-footer', style: 'padding: 8px; border-top: 1px solid var(--border);' },
+              h(
+                'button',
+                {
+                  className: 'tb-btn tb-btn-ghost tb-btn-sm',
+                  style: 'width: 100%; justify-content: flex-start;',
+                  onclick: () => openQuickAddTaskDialog(col),
+                },
+                '+ Add Task'
+              )
+            )
+          );
+
+          return columnEl;
+        })
+      );
+      container.appendChild(boardScroll);
+    }
   }
 
   // Socket.IO real-time subscription
@@ -553,7 +787,7 @@ export function BoardPage(params) {
       render();
     },
     onEvent: () => {
-      loadBoard();
+      refreshData();
     },
   });
 
