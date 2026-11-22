@@ -572,6 +572,8 @@ export const tasksService = {
       }
     }
 
+    const previousUserIds = (task.assignees || []).map((a) => a.id);
+
     const db = getDb();
     const execute = db.transact(() => {
       tasksRepo.setTaskAssignees(taskId, userIds);
@@ -600,6 +602,16 @@ export const tasksService = {
         projectId: task.projectId,
         taskId,
         actorId: userId,
+      });
+
+      events.emitEvent('task.assignees_changed', {
+        workspaceId: task.workspaceId,
+        projectId: task.projectId,
+        taskId,
+        taskTitle: task.title,
+        actorId: userId,
+        previousUserIds,
+        newUserIds: userIds,
       });
     });
 

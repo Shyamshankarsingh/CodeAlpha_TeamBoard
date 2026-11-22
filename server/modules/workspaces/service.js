@@ -8,6 +8,7 @@ import { addDays } from '../../lib/time.js';
 import { AppError } from '../../lib/errors.js';
 import { mailer } from '../../lib/mailer/console.js';
 import { config } from '../../config.js';
+import { events } from '../../lib/events.js';
 
 export const workspacesService = {
   createWorkspace(userId, name) {
@@ -179,6 +180,14 @@ export const workspacesService = {
     }
 
     workspacesRepo.updateMemberRole(workspaceId, targetUserId, newRole);
+
+    events.emitEvent('workspace.member_role_changed', {
+      workspaceId,
+      userId: targetUserId,
+      role: newRole,
+      actorId: userId,
+    });
+
     return {
       userId: targetUserId,
       role: newRole,
@@ -343,6 +352,13 @@ export const workspacesService = {
     });
 
     executeAccept();
+
+    events.emitEvent('workspace.member_added', {
+      workspaceId: invitation.workspace_id,
+      userId,
+      role: invitation.role,
+      actorId: invitation.invited_by,
+    });
 
     return {
       workspaceId: invitation.workspace_id,

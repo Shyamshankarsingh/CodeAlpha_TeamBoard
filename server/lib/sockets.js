@@ -299,7 +299,10 @@ function setupEventBridge() {
     if (!io) return;
 
     // Convert dot notation to colon notation
-    const socketEventType = type.replace(/\./g, ':');
+    let socketEventType = type.replace(/\./g, ':');
+    if (type === 'notification.created') {
+      socketEventType = 'notification:new';
+    }
 
     // Handle session revocation (logout / session deleted) -> WSK-8
     if (type === 'session.revoked' && payload.sessionId) {

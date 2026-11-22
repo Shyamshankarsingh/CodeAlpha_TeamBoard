@@ -132,6 +132,9 @@ const DOMAIN_EVENTS = [
   'comment:created',
   'comment:updated',
   'comment:deleted',
+  'notification:new',
+  'notification:read',
+  'notification:read_all',
 ];
 
 export const socketClient = {

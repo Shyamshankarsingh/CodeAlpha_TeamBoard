@@ -24,6 +24,7 @@ import {
   subtasksRouter,
 } from './modules/tasks/routes.js';
 import { taskCommentsRouter, commentsRouter } from './modules/comments/routes.js';
+import { notificationsRouter } from './modules/notifications/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,6 +78,7 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/subtasks', subtasksRouter);
   app.use('/api/tasks/:taskId/comments', taskCommentsRouter);
   app.use('/api/comments', commentsRouter);
+  app.use('/api/notifications', notificationsRouter);
 
   // 10. 404 & SPA fallback
   app.use(notFound(publicDir));

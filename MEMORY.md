@@ -7,15 +7,14 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 8 complete and verified. Ready for Phase 9 approval.
+- **Stage:** Phase 9 complete and verified. Ready for Phase 10 approval.
 - **Code:**
-  - Real-Time WebSocket Infrastructure (`server/lib/sockets.js`, `public/js/lib/socket.js`): Socket.IO server integrated with HTTP server, cookie session handshake authentication, origin verification.
-  - Rooms & Security: `workspace:<id>`, `project:<id>`, `user:<id>`, `session:<id>`. Server-side room join authorization checking workspace membership, role, and private project visibility (`WSK-4`, `WSK-5`, `WSK-6`). Real-time departure on access revocation (`WSK-7`), immediate session termination on logout (`WSK-8`).
-  - Domain Event Bridge: in-process `events` subscriber formatting event envelopes (`eventId`, `type`, `workspaceId`, `projectId`, `actorId`, `originClientId`, `ts`, `data`) and routing to target rooms post-commit (`WSK-9`).
-  - Echo suppression & Concurrency: per-tab client UUID passed via `X-Client-Id` REST header and captured automatically through `AsyncLocalStorage` (`server/lib/context.js`), 200-item LRU event deduplication, entity version guarding (`WSK-10`, `WSK-11`, `WSK-12`, `WSK-13`).
-  - Multi-tab presence deduplication (`WSK-15`): tab counters per user per project preventing duplicate join/leave broadcasts; 30s heartbeat ping loop; live collaborator avatar stack in Kanban board header.
-- **Tests:** 108 tests passing across 20 suites (`npm test`).
-- **Repository:** Phase 8 ready to commit (`phase-8: real-time websocket infrastructure`).
+  - Notification System (`/api/notifications`): 9 trigger types (`task_assigned`, `task_unassigned`, `comment_created`, `comment_mention`, `task_due_soon`, `task_overdue`, `project_invitation`, `workspace_invitation`, `role_changed`) with strict actor self-exclusion (`FR-N2`), background reminder and overdue idempotent deduplication (`FR-N3`), preference-aware filtering (`users.notification_prefs`, `FR-N4`).
+  - Endpoints: cursor-paginated notification feed (`GET /`), unread badge count (`GET /unread-count`), single read (`POST /:id/read`), mark all read (`POST /read-all`), dismiss notification (`DELETE /:id`).
+  - Database migration: `007_notifications.sql` creating `notifications` with partial index for unread queries and composite indexes for feed and deduplication.
+  - Frontend UI: Header notification bell with live unread badge, interactive dropdown feed (`public/js/components/notifications-menu.js`) with relative time, type-specific icons, mark read on click, dismiss, and real-time Socket.IO synchronization (`notification:new`, `notification:read`, `notification:read_all`).
+- **Tests:** 113 tests passing across 21 suites (`npm test`).
+- **Repository:** Phase 9 ready to commit (`phase-9: notification system`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -34,8 +33,8 @@ Context for coding sessions. Update at the end of every phase.
 | **6** | Task management and drag & drop (005) | Completed |
 | **7** | Comments and collaboration (006) | Completed |
 | **8** | Real-time WebSocket infrastructure (Socket.IO) | Completed |
-| **9** | Notification system (007) | Ready to begin |
-| **10** | Dashboard and analytics | Not started |
+| **9** | Notification system (007) | Completed |
+| **10** | Dashboard and analytics | Ready to begin |
 | **11a** | List view, filters, search (MVP) | Not started |
 | **11b** | Extras (FTS5 search, attachments, bulk, export) | Not started |
 | **12** | Security hardening and comprehensive testing | Not started |

@@ -18,6 +18,91 @@ import { BoardPage } from './pages/board.js';
 import { sidebar } from './components/sidebar.js';
 import { renderToast } from './components/toast.js';
 import { socketClient } from './lib/socket.js';
+import { notificationsMenu } from './components/notifications-menu.js';
+
+let unreadCount = 0;
+let activeNotificationsMenu = null;
+
+async function loadUnreadCount() {
+  try {
+    const res = await api('/api/notifications/unread-count');
+    unreadCount = res?.unreadCount || 0;
+    updateBadge();
+  } catch {}
+}
+
+function updateBadge() {
+  const badges = document.querySelectorAll('.tb-unread-badge');
+  badges.forEach((b) => {
+    if (unreadCount > 0) {
+      b.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      b.style.display = 'inline-block';
+    } else {
+      b.style.display = 'none';
+    }
+  });
+}
+
+function renderNotificationBell() {
+  return h(
+    'button',
+    {
+      className: 'tb-btn tb-btn-ghost tb-btn-sm tb-notifications-btn',
+      title: 'Notifications',
+      style: 'position: relative; font-size: 16px; padding: 4px 8px;',
+      onclick: (e) => {
+        e.stopPropagation();
+        toggleNotificationsMenu();
+      },
+    },
+    '🔔',
+    h(
+      'span',
+      {
+        className: 'tb-badge tb-unread-badge',
+        style: `display: ${unreadCount > 0 ? 'inline-block' : 'none'}; background: var(--color-danger, #ef4444); color: white; border-radius: 10px; padding: 1px 5px; font-size: 10px; position: absolute; top: 0; right: 0; font-weight: bold;`,
+      },
+      unreadCount > 99 ? '99+' : String(unreadCount)
+    )
+  );
+}
+
+function toggleNotificationsMenu() {
+  if (activeNotificationsMenu) {
+    activeNotificationsMenu.remove();
+    activeNotificationsMenu = null;
+    return;
+  }
+
+  const menu = notificationsMenu({
+    onClose: () => {
+      if (activeNotificationsMenu) {
+        activeNotificationsMenu.remove();
+        activeNotificationsMenu = null;
+      }
+    },
+    onCountChange: (delta, reset = false) => {
+      if (reset) {
+        unreadCount = 0;
+      } else {
+        unreadCount = Math.max(0, unreadCount + delta);
+      }
+      updateBadge();
+    },
+  });
+
+  activeNotificationsMenu = menu;
+  document.body.appendChild(menu);
+
+  const closeOnClickOutside = (e) => {
+    if (activeNotificationsMenu && !activeNotificationsMenu.contains(e.target) && !e.target.closest('.tb-notifications-btn')) {
+      activeNotificationsMenu.remove();
+      activeNotificationsMenu = null;
+      document.removeEventListener('click', closeOnClickOutside);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeOnClickOutside), 10);
+}
 
 function AppShell(content, showSidebar = true) {
   const { user, workspaces } = store.getState();
@@ -38,6 +123,7 @@ function AppShell(content, showSidebar = true) {
             { className: 'tb-nav' },
             user
               ? [
+                  renderNotificationBell(),
                   h('span', { className: 'tb-user-name' }, user.name),
                   h('a', { href: '/settings', className: 'tb-btn tb-btn-ghost' }, 'Settings'),
                   h(
@@ -82,6 +168,7 @@ function AppShell(content, showSidebar = true) {
         h(
           'div',
           { className: 'tb-topbar-actions' },
+          renderNotificationBell(),
           h('a', { href: '/settings', className: 'tb-btn tb-btn-ghost tb-btn-sm' }, 'Profile & Sessions'),
           h(
             'button',
@@ -210,7 +297,24 @@ async function init() {
     const data = await api('/api/auth/me');
     if (data && data.user) {
       store.setUser(data.user, data.csrfToken);
-      socketClient.connect();
+      const socket = socketClient.connect();
+      loadUnreadCount();
+
+      if (socket) {
+        socket.on('notification:new', (envelope) => {
+          unreadCount += 1;
+          updateBadge();
+          store.setToast(envelope.data?.title || 'New notification', 'info');
+        });
+        socket.on('notification:read', () => {
+          unreadCount = Math.max(0, unreadCount - 1);
+          updateBadge();
+        });
+        socket.on('notification:read_all', () => {
+          unreadCount = 0;
+          updateBadge();
+        });
+      }
 
       // Load workspaces
       try {
