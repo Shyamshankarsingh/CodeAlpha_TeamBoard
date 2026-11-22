@@ -60,4 +60,33 @@ export const permissions = {
     }
     return false;
   },
+
+  // Project Permissions
+  canCreateProject(workspaceRole) {
+    return ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canViewProject(workspaceRole, projectVisibility, isProjectMember) {
+    if (!workspaceRole) return false;
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    if (projectVisibility === 'workspace') {
+      return ['member', 'viewer'].includes(workspaceRole);
+    }
+    // private: only project members (and owners/admins handled above)
+    return Boolean(isProjectMember) && ['member', 'viewer'].includes(workspaceRole);
+  },
+
+  canEditProject(workspaceRole, projectRole) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    return projectRole === 'lead';
+  },
+
+  canDeleteProject(workspaceRole) {
+    return ['owner', 'admin'].includes(workspaceRole);
+  },
+
+  canManageProjectMembers(workspaceRole, projectRole) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    return projectRole === 'lead';
+  },
 };

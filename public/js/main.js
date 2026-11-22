@@ -12,6 +12,8 @@ import { WorkspaceCreatePage } from './pages/workspace-create.js';
 import { WorkspaceSettingsPage } from './pages/workspace-settings.js';
 import { MembersPage } from './pages/members.js';
 import { InvitePage } from './pages/invite.js';
+import { ProjectsPage } from './pages/projects.js';
+import { ProjectDetailPage } from './pages/project-detail.js';
 import { sidebar } from './components/sidebar.js';
 import { renderToast } from './components/toast.js';
 
@@ -173,6 +175,8 @@ router
     return AppShell(NoWorkspacePage(), false);
   }, { requiresAuth: true })
   .on('/w/:workspaceId', (params) => AppShell(WorkspaceOverview(params)), { requiresAuth: true })
+  .on('/w/:workspaceId/projects', (params) => AppShell(ProjectsPage(params)), { requiresAuth: true })
+  .on('/w/:workspaceId/p/:projectId', (params) => AppShell(ProjectDetailPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/members', (params) => AppShell(MembersPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/settings', (params) => AppShell(WorkspaceSettingsPage(params)), { requiresAuth: true })
   .on('/workspaces/new', () => AppShell(WorkspaceCreatePage(), false), { requiresAuth: true })

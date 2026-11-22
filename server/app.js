@@ -13,6 +13,7 @@ import { config as defaultConfig } from './config.js';
 import { authRouter } from './modules/auth/routes.js';
 import { usersRouter } from './modules/users/routes.js';
 import { workspacesRouter, invitationsRouter } from './modules/workspaces/routes.js';
+import { projectsRouter } from './modules/projects/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +55,7 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/users', usersRouter);
   app.use('/api/workspaces', workspacesRouter);
   app.use('/api/invitations', invitationsRouter);
+  app.use('/api/projects', projectsRouter);
 
   // 10. 404 & SPA fallback
   app.use(notFound(publicDir));

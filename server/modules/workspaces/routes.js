@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { workspacesService } from './service.js';
+import { workspaceProjectsRouter } from '../projects/routes.js';
+import { projectsService } from '../projects/service.js';
+import { activityQuerySchema } from '../projects/schema.js';
 import {
   createWorkspaceSchema,
   updateWorkspaceSchema,
@@ -123,6 +126,18 @@ workspacesRouter.delete('/:id/invitations/:invId', requireAuth, (req, res, next)
   try {
     workspacesService.revokeInvitation(req.user.id, req.params.id, req.params.invId);
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// --- Nested Projects & Workspace Activity ---
+workspacesRouter.use('/:wid/projects', workspaceProjectsRouter);
+
+workspacesRouter.get('/:id/activity', requireAuth, validate(activityQuerySchema, 'query'), (req, res, next) => {
+  try {
+    const activity = projectsService.listWorkspaceActivity(req.user.id, req.params.id, req.query);
+    res.status(200).json({ data: activity.items, meta: { nextCursor: activity.nextCursor } });
   } catch (err) {
     next(err);
   }
