@@ -2,11 +2,13 @@ import { h, clearChildren } from '../lib/dom.js';
 import { api } from '../api.js';
 import { store } from '../store.js';
 import { dialog } from './dialog.js';
+import { avatar } from './avatar.js';
 
 export function openTaskPanel({ taskId, columns = [], onUpdated }) {
   let task = null;
   let workspaceMembers = [];
   let projectLabels = [];
+  let comments = [];
   let modal = null;
 
   const contentContainer = h('div', { className: 'tb-task-panel-content' });
@@ -14,10 +16,9 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
   async function loadData() {
     try {
       task = await api(`/api/tasks/${taskId}`);
-      // Load workspace members for assignee selection
       workspaceMembers = await api(`/api/workspaces/${task.workspaceId}/members`);
-      // Load project labels
       projectLabels = await api(`/api/projects/${task.projectId}/labels`);
+      comments = await api(`/api/tasks/${taskId}/comments`);
       render();
     } catch (err) {
       store.setToast(err.message || 'Failed to load task details', 'error');
@@ -352,6 +353,178 @@ export function openTaskPanel({ taskId, columns = [], onUpdated }) {
           maxLength: 200,
         })),
         h('button', { type: 'submit', className: 'tb-btn tb-btn-secondary' }, 'Add')
+      )
+    );
+
+    // Comments Section
+    let newCommentInput;
+    const commentsSection = h(
+      'div',
+      { className: 'tb-panel-section', style: 'margin-top: var(--space-6);' },
+      h('h4', { className: 'tb-section-title' }, `Comments (${comments.length})`),
+      h(
+        'form',
+        {
+          style: 'display: flex; flex-direction: column; gap: 8px; margin: 12px 0;',
+          onsubmit: async (e) => {
+            e.preventDefault();
+            const text = newCommentInput.value.trim();
+            if (!text) return;
+            try {
+              await api(`/api/tasks/${taskId}/comments`, {
+                method: 'POST',
+                body: { body: text },
+              });
+              newCommentInput.value = '';
+              comments = await api(`/api/tasks/${taskId}/comments`);
+              render();
+            } catch (err) {
+              store.setToast(err.message || 'Failed to post comment', 'error');
+            }
+          },
+        },
+        (newCommentInput = h('textarea', {
+          className: 'tb-input',
+          rows: 2,
+          placeholder: 'Write a comment... (use @ to mention)',
+          maxLength: 5000,
+        })),
+        h(
+          'div',
+          { style: 'display: flex; justify-content: flex-end;' },
+          h('button', { type: 'submit', className: 'tb-btn tb-btn-primary tb-btn-sm' }, 'Post Comment')
+        )
+      ),
+      h(
+        'div',
+        { className: 'tb-comments-thread', style: 'display: flex; flex-direction: column; gap: 12px;' },
+        ...comments.map((root) => {
+          let replyBox;
+          const rootEl = h(
+            'div',
+            { className: 'tb-comment-item', style: 'padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);' },
+            h(
+              'div',
+              { style: 'display: flex; justify-content: space-between; align-items: center;' },
+              h(
+                'div',
+                { style: 'display: flex; align-items: center; gap: 8px;' },
+                avatar(root.author ? root.author.name : 'User', 'sm'),
+                h('strong', { style: 'font-size: var(--font-size-sm);' }, root.author ? root.author.name : 'User'),
+                h('span', { style: 'font-size: var(--font-size-xs); color: var(--color-text-muted);' }, new Date(root.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+              ),
+              h(
+                'div',
+                { style: 'display: flex; gap: 4px;' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'tb-btn tb-btn-ghost tb-btn-sm',
+                    style: 'font-size: var(--font-size-xs); padding: 2px 6px;',
+                    onclick: () => {
+                      replyBox.style.display = replyBox.style.display === 'none' ? 'flex' : 'none';
+                    },
+                  },
+                  'Reply'
+                ),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'tb-btn-icon tb-btn-icon-danger',
+                    onclick: async () => {
+                      if (!confirm('Delete comment?')) return;
+                      try {
+                        await api(`/api/comments/${root.id}`, { method: 'DELETE' });
+                        comments = await api(`/api/tasks/${taskId}/comments`);
+                        render();
+                      } catch (err) {
+                        store.setToast(err.message || 'Failed to delete comment', 'error');
+                      }
+                    },
+                  },
+                  '×'
+                )
+              )
+            ),
+            h('p', { style: `margin: 6px 0; font-size: var(--font-size-sm); ${root.isDeleted ? 'color: var(--color-text-muted); font-style: italic;' : ''}` }, root.body),
+            // Nested replies (FR-C1: 1 level)
+            (root.replies || []).length > 0
+              ? h(
+                  'div',
+                  { style: 'margin-left: 24px; padding-left: 8px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 8px; margin-top: 8px;' },
+                  ...root.replies.map((reply) =>
+                    h(
+                      'div',
+                      { style: 'font-size: var(--font-size-sm);' },
+                      h(
+                        'div',
+                        { style: 'display: flex; justify-content: space-between; align-items: center;' },
+                        h(
+                          'div',
+                          { style: 'display: flex; align-items: center; gap: 6px;' },
+                          avatar(reply.author ? reply.author.name : 'User', 'sm'),
+                          h('strong', { style: 'font-size: var(--font-size-xs);' }, reply.author ? reply.author.name : 'User'),
+                          h('span', { style: 'font-size: var(--font-size-xs); color: var(--color-text-muted);' }, new Date(reply.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+                        ),
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'tb-btn-icon tb-btn-icon-danger',
+                            onclick: async () => {
+                              if (!confirm('Delete reply?')) return;
+                              try {
+                                await api(`/api/comments/${reply.id}`, { method: 'DELETE' });
+                                comments = await api(`/api/tasks/${taskId}/comments`);
+                                render();
+                              } catch (err) {
+                                store.setToast(err.message || 'Failed to delete reply', 'error');
+                              }
+                            },
+                          },
+                          '×'
+                        )
+                      ),
+                      h('p', { style: `margin: 4px 0; font-size: var(--font-size-xs); ${reply.isDeleted ? 'color: var(--color-text-muted); font-style: italic;' : ''}` }, reply.body)
+                    )
+                  )
+                )
+              : null,
+            // Reply Input Form
+            (replyBox = h(
+              'form',
+              {
+                style: 'display: none; gap: 6px; margin-top: 8px; margin-left: 24px;',
+                onsubmit: async (e) => {
+                  e.preventDefault();
+                  const replyText = replyInput.value.trim();
+                  if (!replyText) return;
+                  try {
+                    await api(`/api/tasks/${taskId}/comments`, {
+                      method: 'POST',
+                      body: { body: replyText, parentId: root.id },
+                    });
+                    comments = await api(`/api/tasks/${taskId}/comments`);
+                    render();
+                  } catch (err) {
+                    store.setToast(err.message || 'Failed to reply', 'error');
+                  }
+                },
+              },
+              (replyInput = h('input', {
+                type: 'text',
+                className: 'tb-input',
+                placeholder: 'Write a reply...',
+                maxLength: 5000,
+              })),
+              h('button', { type: 'submit', className: 'tb-btn tb-btn-secondary tb-btn-sm' }, 'Reply')
+            ))
+          );
+          let replyInput;
+          return rootEl;
+        })
       )
     );
 

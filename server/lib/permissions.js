@@ -115,4 +115,20 @@ export const permissions = {
     if (reporterId === userId && workspaceRole === 'member') return true;
     return false;
   },
+
+  // Comment Permissions
+  canCreateComment(workspaceRole) {
+    return ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canEditComment(workspaceRole, authorId, userId) {
+    return authorId === userId && ['owner', 'admin', 'member'].includes(workspaceRole);
+  },
+
+  canDeleteComment(workspaceRole, projectRole, authorId, userId) {
+    if (['owner', 'admin'].includes(workspaceRole)) return true;
+    if (projectRole === 'lead') return true;
+    if (authorId === userId && ['owner', 'admin', 'member'].includes(workspaceRole)) return true;
+    return false;
+  },
 };

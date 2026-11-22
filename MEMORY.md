@@ -7,16 +7,13 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 6 complete and verified. Ready for Phase 7 approval.
+- **Stage:** Phase 7 complete and verified. Ready for Phase 8 approval.
 - **Code:**
-  - Task management (`/api/tasks`, `/api/columns/:cid/tasks`, `/api/projects/:pid/labels`, `/api/labels/:id`, `/api/subtasks/:id`): task CRUD, optimistic locking concurrency control (`expectedVersion` returning 409 conflict), within-column and cross-column moves with fractional position calculation (`server/lib/position.js`), cross-project move prevention (`TK-13`), automatic completion tracking when moved into or out of `done` category columns (`TK-5`), task duplication (`TK-10`), archive/unarchive lifecycle, date range enforcement (`start_date <= due_date`).
-  - Assignees & Watchers: workspace member assignee validation (`TK-6`), automatic watching on task creation and assignment (`TK-11`), watch/unwatch management.
-  - Labels: project-scoped label management with color hex code validation, cross-project label assignment rejection (`TK-8`).
-  - Subtasks: subtask CRUD, completion toggle, and reordering.
-  - Database migration: `005_tasks.sql` creating `tasks`, `task_assignees`, `labels`, `task_labels`, `subtasks`, and `task_watchers`.
-  - Frontend UI: Task card component ([public/js/components/task-card.js](file:///e:/projectanagement/public/js/components/task-card.js)) with priority indicators, label chips, subtask counters, assignee avatars, drag-and-drop support, and keyboard-accessible "Move to column..." dropdown. Task detail modal panel ([public/js/components/task-panel.js](file:///e:/projectanagement/public/js/components/task-panel.js)) with inline editing, assignee toggle chips, label chips, subtasks checklist, quick add, duplicate, archive, and delete actions. Kanban board updated with drag-and-drop dropzones and quick-add task triggers. Pure DOM `h()` builder, zero raw HTML injection (`innerHTML`).
-- **Tests:** 94 tests passing across 18 suites (`npm test`).
-- **Repository:** Phase 6 ready to commit (`phase-6: task management and drag and drop`).
+  - Comments & Collaboration (`/api/tasks/:taskId/comments`, `/api/comments/:id`): threaded discussions (strict 1-level reply limit per `FR-C1`), author-only edits (`FR-C2`), soft-delete preserving child threads when replies exist / hard-delete otherwise (`ADR-013`, `FR-C3`), workspace member mention validation with automatic task watching for author and mentioned users (`FR-C4`, `TK-11`), markdown rendering via safe DOM construction.
+  - Database migration: `006_comments.sql` creating `comments` with `parent_id` self-referencing foreign key, `deleted_at` timestamp.
+  - Frontend UI: Threaded comments in `public/js/components/task-panel.js` with author badges, relative timestamps, reply toggle, delete confirmation, and sanitized text rendering (zero `innerHTML`).
+- **Tests:** 99 tests passing across 19 suites (`npm test`).
+- **Repository:** Phase 7 ready to commit (`phase-7: task comments and collaboration`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -33,8 +30,8 @@ Context for coding sessions. Update at the end of every phase.
 | **4** | Project management, activity logs, domain events (003) | Completed |
 | **5** | Board and column management (004) | Completed |
 | **6** | Task management and drag & drop (005) | Completed |
-| **7** | Comments and collaboration (006) | Ready to begin |
-| **8** | Real-time WebSocket infrastructure (Socket.IO) | Not started |
+| **7** | Comments and collaboration (006) | Completed |
+| **8** | Real-time WebSocket infrastructure (Socket.IO) | Ready to begin |
 | **9** | Notification system (007) | Not started |
 | **10** | Dashboard and analytics | Not started |
 | **11a** | List view, filters, search (MVP) | Not started |
