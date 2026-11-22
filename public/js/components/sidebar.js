@@ -55,7 +55,7 @@ export function sidebar() {
     h(
       'nav',
       { className: 'tb-sidebar-nav' },
-      navItem(wsId ? `/w/${wsId}` : '/', 'Overview', '📊'),
+      navItem(wsId ? `/w/${wsId}` : '/', 'Dashboard', '📊'),
       navItem(wsId ? `/w/${wsId}/projects` : '/projects', 'Projects', '📁'),
       navItem(wsId ? `/w/${wsId}/members` : '/members', 'Members', '👥'),
       navItem(wsId ? `/w/${wsId}/settings` : '/settings', 'Workspace Settings', '⚙️')

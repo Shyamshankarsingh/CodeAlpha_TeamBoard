@@ -25,6 +25,7 @@ import {
 } from './modules/tasks/routes.js';
 import { taskCommentsRouter, commentsRouter } from './modules/comments/routes.js';
 import { notificationsRouter } from './modules/notifications/routes.js';
+import { workspaceDashboardRouter } from './modules/dashboard/routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -66,6 +67,7 @@ export function createApp(appConfig = defaultConfig, publicDir = defaultPublicDi
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/workspaces', workspacesRouter);
+  app.use('/api/workspaces/:wid/dashboard', workspaceDashboardRouter);
   app.use('/api/invitations', invitationsRouter);
   app.use('/api/projects', projectsRouter);
   app.use('/api/projects/:pid/boards', projectBoardsRouter);

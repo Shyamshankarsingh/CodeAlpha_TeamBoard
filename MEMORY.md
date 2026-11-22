@@ -7,14 +7,17 @@ Context for coding sessions. Update at the end of every phase.
 
 ## Current State
 
-- **Stage:** Phase 9 complete and verified. Ready for Phase 10 approval.
+- **Stage:** Phase 10 complete and verified. Ready for Phase 11a approval.
 - **Code:**
-  - Notification System (`/api/notifications`): 9 trigger types (`task_assigned`, `task_unassigned`, `comment_created`, `comment_mention`, `task_due_soon`, `task_overdue`, `project_invitation`, `workspace_invitation`, `role_changed`) with strict actor self-exclusion (`FR-N2`), background reminder and overdue idempotent deduplication (`FR-N3`), preference-aware filtering (`users.notification_prefs`, `FR-N4`).
-  - Endpoints: cursor-paginated notification feed (`GET /`), unread badge count (`GET /unread-count`), single read (`POST /:id/read`), mark all read (`POST /read-all`), dismiss notification (`DELETE /:id`).
-  - Database migration: `007_notifications.sql` creating `notifications` with partial index for unread queries and composite indexes for feed and deduplication.
-  - Frontend UI: Header notification bell with live unread badge, interactive dropdown feed (`public/js/components/notifications-menu.js`) with relative time, type-specific icons, mark read on click, dismiss, and real-time Socket.IO synchronization (`notification:new`, `notification:read`, `notification:read_all`).
-- **Tests:** 113 tests passing across 21 suites (`npm test`).
-- **Repository:** Phase 9 ready to commit (`phase-9: notification system`).
+  - Dashboard and Analytics (`/api/workspaces/:wid/dashboard`):
+    - `GET /overview`: Workspace totals, completion stats, in-progress count, overdue tasks, completion percentage, priority breakdown, and per-project progress bars.
+    - `GET /my-tasks`: Paginated list of tasks assigned to the current user, ordered by due date and priority.
+    - `GET /upcoming`: 14-day schedule categorized into Today, Tomorrow, This Week, and Next Week.
+    - `GET /activity`: Filtered workspace activity feed.
+    - Strict privacy boundaries (`DB-2`): Tasks and metrics from private projects the user has no access to are strictly excluded from all dashboard counts, task lists, and activity streams.
+  - Frontend UI: Modern dashboard page (`public/js/pages/dashboard.js`) rendered at `/w/:workspaceId` and `/w/:workspaceId/dashboard`, featuring metric counter cards, project progress bars, interactive "My Tasks" widget, 14-day deadlines schedule, and recent activity stream. Pure DOM `h()` builder (zero `innerHTML`).
+- **Tests:** 117 tests passing across 22 suites (`npm test`).
+- **Repository:** Phase 10 ready to commit (`phase-10: dashboard and analytics`).
 - **Environment:** Node v26.11.1, npm 11.20.0 on Windows.
 - **Documentation:** Up to date.
 
@@ -34,8 +37,8 @@ Context for coding sessions. Update at the end of every phase.
 | **7** | Comments and collaboration (006) | Completed |
 | **8** | Real-time WebSocket infrastructure (Socket.IO) | Completed |
 | **9** | Notification system (007) | Completed |
-| **10** | Dashboard and analytics | Ready to begin |
-| **11a** | List view, filters, search (MVP) | Not started |
+| **10** | Dashboard and analytics | Completed |
+| **11a** | List view, filters, search (MVP) | Ready to begin |
 | **11b** | Extras (FTS5 search, attachments, bulk, export) | Not started |
 | **12** | Security hardening and comprehensive testing | Not started |
 | **13** | Responsive design and UX refinement | Not started |

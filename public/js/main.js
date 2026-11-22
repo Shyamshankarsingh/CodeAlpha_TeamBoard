@@ -15,6 +15,7 @@ import { InvitePage } from './pages/invite.js';
 import { ProjectsPage } from './pages/projects.js';
 import { ProjectDetailPage } from './pages/project-detail.js';
 import { BoardPage } from './pages/board.js';
+import { DashboardPage } from './pages/dashboard.js';
 import { sidebar } from './components/sidebar.js';
 import { renderToast } from './components/toast.js';
 import { socketClient } from './lib/socket.js';
@@ -260,11 +261,12 @@ router
     const { workspaces, currentWorkspaceId } = store.getState();
     if (workspaces.length > 0) {
       const targetId = currentWorkspaceId || workspaces[0].id;
-      return AppShell(WorkspaceOverview({ workspaceId: targetId }));
+      return AppShell(DashboardPage({ workspaceId: targetId }));
     }
     return AppShell(NoWorkspacePage(), false);
   }, { requiresAuth: true })
-  .on('/w/:workspaceId', (params) => AppShell(WorkspaceOverview(params)), { requiresAuth: true })
+  .on('/w/:workspaceId', (params) => AppShell(DashboardPage(params)), { requiresAuth: true })
+  .on('/w/:workspaceId/dashboard', (params) => AppShell(DashboardPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/projects', (params) => AppShell(ProjectsPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/p/:projectId', (params) => AppShell(ProjectDetailPage(params)), { requiresAuth: true })
   .on('/w/:workspaceId/p/:projectId/board', (params) => AppShell(BoardPage(params)), { requiresAuth: true })
